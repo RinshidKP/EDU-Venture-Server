@@ -1,0 +1,38 @@
+import express from "express";
+import { verify } from "../middleware/auth.js";
+import {
+createConsultancy,
+validateOtp,handleSignin,
+resend_otp,loadProfile,
+updateProfile,load_courses,
+create_courses,
+list_consultant_courses,updateCourse,
+forgot_password,new_password,
+loadStudents,list_create_countries,
+ acceptStudent, declineStudent,
+} from '../controllers/consultencyController/consultencyController.js'
+import uploadImage from "../helper/multer.js";
+const router = express.Router()
+
+// Validation
+router.post('/signup',createConsultancy);
+router.post('/otpvalidate',validateOtp);
+router.post('/login',handleSignin);
+router.get('/resend_otp',resend_otp);
+//Students
+router.get('/students_consultent',verify,loadStudents );
+router.post('/accept_candidate',verify,acceptStudent );
+router.post('/decline_candidate',verify,declineStudent );
+
+//profile
+router.get('/profile',verify,loadProfile);
+router.post('/update_profile',verify,uploadImage,updateProfile);
+router.post('/forgot_password',forgot_password);
+router.post('/new_password',verify,new_password);
+//Courses
+router.get('/load_courses',verify,load_courses);
+router.get('/list_countries',verify,list_create_countries);
+router.post('/create_courses',verify,uploadImage,create_courses);
+router.get('/consultent_courses',verify,list_consultant_courses)
+router.post('/update_course',verify,uploadImage,updateCourse);
+export default router;
