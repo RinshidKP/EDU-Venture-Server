@@ -11,18 +11,34 @@ class ConsultancyRepository {
     }
   }
 
-  async getAllConsultants(limit = 0, sort) {
-    try {
-      const consultants = await Consultancy.find({ isVerified: true, isActive: true })
-      .limit(limit)
+async getAllConsultants(skipCount, itemsPerPage, sort = { createdAt: 1 }) {
+  try {
+    const consultents = await Consultancy.find()
+      .skip(skipCount)
+      .limit(itemsPerPage)
       .sort(sort);
-      return consultants;
-    } catch (error) {
-      console.error(error);
-      throw new Error('Failed to find all the verified and active consultants');
-    }
+      const totalConsultantsCount = await Consultancy.countDocuments();
+    return {consultents,totalConsultantsCount};
+  } catch (error) {
+    console.error(error);
+    throw new Error('Failed to find all the verified and active consultants');
   }
-  
+}
+
+async getConsultantsForHome(skip = 0, sort = { createdAt: 1 }) {
+  try {
+      const consultants = await Consultancy.find({ isVerified: true, isActive: true })
+          .skip(skip)
+          .sort(sort);
+      return consultants;
+  } catch (error) {
+      // Handle the error appropriately
+      console.error(error);
+      throw new Error('Failed to get consultants for home');
+  }
+}
+
+
 
   async getConsultantByEmail(email) {
     try {
@@ -103,6 +119,20 @@ class ConsultancyRepository {
     }
   }
   
+  async updateConsultantAccessByID(id) {
+    try {
+          let consultant = await Consultancy.findById(id)
+          consultant.isActive = !consultant.isActive
+          await consultant.save();
+          // console.log(consultant);
+          return consultant
+      } catch (error) {
+          console.error(error);
+          throw new Error('Failed to update consultant by ID');
+      }
+  }
+
+
   
   
   

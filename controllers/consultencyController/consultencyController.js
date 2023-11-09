@@ -292,7 +292,7 @@ export const forgot_password = async (req,res) => {
     const user = await ConsultancyDB.getConsultantByEmail(userData.email)
     console.log(user);
     if(!user){
-      res.status(404).json({message:'User Not Found'})
+      return res.status(404).json({message:'User Not Found'})
     }
     const new_otp = Math.floor(1000 + Math.random() * 9000);
 

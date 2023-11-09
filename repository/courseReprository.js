@@ -159,6 +159,50 @@ class CourseRepository {
     }
   }
 
+  async getCourseCountByCreator(consultentIds){
+    try {
+      const coursesCountByConsultant = await CourseModel.aggregate([
+        {
+          $match: {
+            creator_id: { $in: consultentIds },
+          },
+        },
+        {
+          $group: {
+            _id: '$creator_id',
+            count: { $sum: 1 },
+          },
+        },
+      ]);
+      return coursesCountByConsultant ;
+    } catch (error) {
+      console.error(error);
+      throw new Error('Failed to get course counts by consultant');
+    }
+  }
+
+  async getCourseCountByConsultantId(consultantId) {
+    try {
+      const coursesCountByConsultant = await CourseModel.aggregate([
+        {
+          $match: {
+            creator_id: consultantId,
+          },
+        },
+        {
+          $count: 'count',
+        },
+      ]);
+  
+      const count = coursesCountByConsultant.length > 0 ? coursesCountByConsultant[0].count : 0;
+  
+      return count;
+    } catch (error) {
+      console.error(error);
+      throw new Error('Failed to get course count by consultant ID');
+    }
+  }  
+
 }
 
 

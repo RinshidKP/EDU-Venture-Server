@@ -248,7 +248,7 @@ export const list_courses_by_creator = async (req,res) => {
 
 export const list_consultencies = async (req,res) => {
   try{
-    const consultents = await counsultentDB.getAllConsultants(3,{createdAt: -1});
+    const consultents = await counsultentDB.getConsultantsForHome(3,{createdAt: -1});
     res.status(200).json({ consultents });
   } catch (error) {
     console.error('Error while listing courses:', error);
@@ -261,7 +261,7 @@ export const forgot_password = async (req, res) => {
     const userData = req.body;
     const user = await StudentDB.getUserByEmail(userData.email);
     if (!user) {
-      return res.status(404).json({ message: 'User Not Found' });
+      return res.status(400).json({ message: 'User Not Found' });
     }
     const new_otp = Math.floor(1000 + Math.random() * 9000);
     await OneTimePassword.createOtp(user.email, new_otp);

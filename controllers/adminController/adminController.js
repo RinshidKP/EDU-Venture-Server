@@ -1,10 +1,12 @@
 import ConsultancyRepository from "../../repository/consultentReprository.js";
 import CountriesRepository from "../../repository/countriesRepository.js";
+import CourseRepository from "../../repository/courseReprository.js";
 import StudentRepository from "../../repository/studentRepository.js"
 
 const studentDB = new StudentRepository();
 const consultentDB = new ConsultancyRepository();
 const countryDB = new CountriesRepository();
+const courseDB = new CourseRepository();
 
 export const adminDashboard = async (req,res) => {
     try {
@@ -93,3 +95,55 @@ export const disableCountryById = async (req,res) => {
     res.status(500).json({ error: 'An error occurred while disabling/enabling the country' });
   }
   };
+
+export const getConsultentData = async (req,res)=>{
+  try {
+    const { page, limit } = req.query;
+    const pageNumber = parseInt(page, 10);
+    const itemsPerPage = parseInt(limit, 10);
+    const skipCount = (pageNumber - 1) * itemsPerPage;
+    const { consultents , totalConsultantsCount } = await consultentDB.getAllConsultants(skipCount, itemsPerPage);
+    
+    if(!consultents){
+      return res.status(404).json({message:'consultents not found'})
+    }
+
+    const consultentIds = consultents.map((consultant) => consultant._id);
+
+    const coursesCountByConsultant = await courseDB.getCourseCountByCreator(consultentIds);
+
+    const consultantsWithCoursesCount = consultents.map((consultant) => {
+      const courseCountObj = coursesCountByConsultant.find((item) => item._id.equals(consultant._id));
+      return {
+        ...consultant._doc,
+        coursesCount: courseCountObj ? courseCountObj.count : 0,
+      };
+    });
+
+    res.status(200).json({consultents: consultantsWithCoursesCount,totalConsultantsCount})
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'An error occurred while getting Consultents' });
+  }
+}
+
+export const changeConsultencyAccess = async (req, res) => {
+  try {
+      const { id } = req.body;
+      const consultant = await consultentDB.updateConsultantAccessByID(id);
+
+      if (!consultant) {
+          return res.status(400).json({ message: consultant.message });
+      }
+
+      const coursesCountByConsultant = await courseDB.getCourseCountByConsultantId(consultant._id);
+      const consultantsWithCoursesCount = {...consultant._doc,coursesCount:coursesCountByConsultant}
+      
+
+      res.status(200).json({ consultant:consultantsWithCoursesCount,message: 'Consultant updated successfully' });
+  } catch (error) {
+      console.error('Error changing consultant access:', error);
+      res.status(500).json({ message: 'An error occurred while changing consultant access' });
+  }
+}
