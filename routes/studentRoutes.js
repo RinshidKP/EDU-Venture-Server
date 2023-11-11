@@ -11,7 +11,8 @@ import {
     apply_new_course,
     home_countries,
     listAllCountries,
-    getCountryCourse
+    getCountryCourse,
+    getApplications
 } from '../controllers/studentController/studentController.js';
 import { verify } from "../middleware/auth.js";
 import uploadImage from "../helper/multer.js";
@@ -32,6 +33,7 @@ router.get('/list_consultencies',list_consultencies);
 router.get('/view_courses',view_all_courses);
 router.get('/view_consultencies',view_all_consultencies);
 router.post('/apply_course',verify,apply_new_course);
+router.get('/student_course',verify,getApplications);
 router.get('/home_countries',home_countries);
 router.get('/list_country_courses',getCountryCourse);
 

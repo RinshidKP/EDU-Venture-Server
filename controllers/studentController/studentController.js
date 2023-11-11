@@ -183,7 +183,8 @@ export const handleSignin = async (req, res, next) => {
 
 export const loadProfile = async (req, res, next) => {
   try {
-    const { email } = req.query;
+    const email= req.user.email;
+    // console.log(req.user.email);
     const user = await StudentDB.getUserByEmail(email);
 
     if (user) {
@@ -329,7 +330,7 @@ export const view_all_courses = async (req, res) => {
     const skipCount = (pageNumber - 1) * itemsPerPage;
     
     const { courses, totalCoursesCount } = await courseDB.getCoursesByPage(skipCount, itemsPerPage);
-    
+    // console.log(courses);    
     res.status(200).json({ courses, totalCoursesCount });
   } catch (error) {
     console.error('Error while viewing courses:', error);
@@ -350,7 +351,7 @@ export const view_all_consultencies = async (req,res)=>{
       throw new Error('Invalid page or limit parameters');
     }
     const { consultants, totalConsultantsCount } = await counsultentDB.getAllConsultantsByPage(skipCount, itemsPerPage);
-    // console.log(consultants, totalConsultantsCount );
+    console.log(consultants, totalConsultantsCount );
     res.status(200).json({ consultants, totalConsultantsCount });
   } catch (error) {
     console.error('Error while viewing Consultencies:', error);
@@ -380,7 +381,8 @@ export const listAllCountries = async (req,res) => {
     const {countries ,totalCount} = await countryDB.getAllCountriesByPage(skipCount, itemsPerPage)
     res.status(200).json({ countries ,totalCount });
   } catch (error) {
-    
+    console.error('Error listing All Countries:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 }
 
@@ -390,6 +392,23 @@ export const getCountryCourse = async (req,res) =>{
     const courses = await courseDB.getCoursesByCountry(countryID)
     res.status(200).json({courses})
   } catch (error) {
-    
+    console.error('Error listing Courses By Countries :', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+export const getApplications = async (req,res) => {
+  try {
+    const email = req.user.email;
+    const user = await StudentDB.findStudentInfoByEmail(email);
+    const applications = await applicationDB.getApplicationsByStudent(user._id)
+    if(!applications){
+      return res.status(404).json({ message: 'No Applications Found' });
+    }
+
+    res.status(200).json({applications})
+  } catch (error) {
+    console.error('Error listing Applications of specific Student:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 }

@@ -60,7 +60,7 @@ class ApplicationRepository {
   // Get all applications for a specific student
   async getApplicationsByStudent(studentId) {
     try {
-      const applications = await ApplicationModel.find({ student: studentId });
+      const applications = await ApplicationModel.find({ student: studentId }).populate('course');
       return applications;
     } catch (error) {
       throw error;

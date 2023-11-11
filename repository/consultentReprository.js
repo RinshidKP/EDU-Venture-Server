@@ -11,7 +11,7 @@ class ConsultancyRepository {
     }
   }
 
-async getAllConsultants(skipCount, itemsPerPage, sort = { createdAt: 1 }) {
+async getAllConsultants(skipCount=0, itemsPerPage=0, sort = { createdAt: 1 }) {
   try {
     const consultents = await Consultancy.find()
       .skip(skipCount)

@@ -109,6 +109,34 @@ class CourseRepository {
           $facet: {
             courses: [
               {
+                $lookup: {
+                  from: 'consultancies',
+                  localField: 'creator_id',
+                  foreignField: '_id',
+                  as: 'creator',
+                },
+              },
+              {
+                $unwind: {
+                  path: '$creator',
+                  preserveNullAndEmptyArrays: true,
+                },
+              },
+              {
+                $lookup: {
+                  from: 'countries', 
+                  localField: 'country',
+                  foreignField: '_id',
+                  as: 'countryInfo',
+                },
+              },
+              {
+                $unwind: {
+                  path: '$countryInfo',
+                  preserveNullAndEmptyArrays: true,
+                },
+              },
+              {
                 $skip: skip,
               },
               {
@@ -126,12 +154,13 @@ class CourseRepository {
           },
         },
       ];
-  
+      
       const result = await CourseModel.aggregate(aggregationPipeline).exec();
       const courses = result[0].courses;
       const totalCoursesCount = result[0].totalCourseCount[0]?.count || 0;
-
+      
       return { courses, totalCoursesCount };
+      
     } catch (error) {
       throw error;
     }
