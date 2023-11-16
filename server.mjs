@@ -48,11 +48,11 @@ function getUserIdFromSocket(socket) {
 }
 
 io.on('connection', (socket) => {
-  console.log('A user connected');
+  // console.log('A user connected');
   const userId = getUserIdFromSocket(socket)
   if(userId){
     userSockets[userId]=socket;
-    console.log('user',userId); 
+    // console.log('user',userId); 
   }
   socket.on('disconnect', () => {
 

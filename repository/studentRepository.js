@@ -129,15 +129,54 @@ class StudentRepository {
       throw new Error('Failed to find students with courses created by consultant');
     }
     }
-    async listStudentsForAdmin() {
+    async listStudentsForAdmin(search, skipCount = 0, itemsPerPage = 0, sort = { createdAt: 1 }) {
       try {
-        const students = await StudentModel.find({ isAdmin: false });
-        return students; 
+        let query = { isAdmin: false };
+        if (search) {
+          query.$or = [
+            { full_name: { $regex: new RegExp(search, 'i') } },
+            { email: { $regex: new RegExp(search, 'i') } },
+          ];
+        }
+        const students = await StudentModel.find(query)
+          .skip(skipCount)
+          .limit(itemsPerPage)
+          .sort(sort);
+          const totalStudentsCount = await StudentModel.countDocuments({ isAdmin: false });
+        return { students, totalStudentsCount };
       } catch (error) {
         console.error("Error fetching students:", error);
-        throw error; 
+        throw error;
       }
     }
+    async findArrayOfStudents(objectIds) {
+      try {
+        const students = await StudentModel.find({ _id: { $in: objectIds } });
+        return students;
+      } catch (error) {
+        console.error('Error in findArrayOfStudents:', error);
+        throw error;
+      }
+    }
+
+    async updateStudentAccessById(studentId) {
+      try {
+        let student = await StudentModel.findById(studentId);
+    
+        if (student) {
+          student.isActive = !student.isActive;
+          await student.save();
+          return student;
+        } else {
+          throw new Error('Student not found');
+        }
+      } catch (error) {
+        throw error;
+      }
+    }
+    
+    
+    
 }
 
 

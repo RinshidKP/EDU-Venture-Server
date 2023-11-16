@@ -10,7 +10,7 @@ router.post('/messages', async (req, res) => {
     const message = await createMessage(sender, receiver, text);
     if(userSockets[receiver]){
         const socket = userSockets[receiver];
-        console.log('Message Send'); 
+        console.log('Message Send',message); 
         socket.emit('message',{message})
     }
     res.status(201).json(message);
@@ -39,7 +39,7 @@ router.get('/messages/:user1/:user2', async (req, res) => {
     if(!messages){
        return res.status(400).json({message:'No message Found'})
     }
-    console.log(messages);
+    // console.log(messages);
     res.status(200).json(messages);
   } catch (error) {
     res.status(500).json({ error: 'Error finding messages' });

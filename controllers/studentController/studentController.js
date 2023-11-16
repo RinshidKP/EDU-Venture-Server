@@ -1,12 +1,14 @@
-import {compareSecret, secretHash} from '../../helper/secretHash.js'
+import { compareSecret, secretHash } from '../../helper/secretHash.js'
 import StudentRepository from '../../repository/studentRepository.js';
 import OtpRepository from '../../repository/otpReprository.js';
 import CourseRepository from '../../repository/courseReprository.js';
 import ConsultancyRepository from '../../repository/consultentReprository.js';
-import  sendMail  from '../../helper/sendMail.js';
+import sendMail from '../../helper/sendMail.js';
 import { generateToken } from '../../middleware/auth.js';
 import ApplicationRepository from '../../repository/applicationRepository.js';
 import CountriesRepository from '../../repository/countriesRepository.js';
+import messageRepository from '../../repository/chatRepository.js';
+import BlogRepository from '../../repository/blogRepository.js';
 
 
 const StudentDB = new StudentRepository();
@@ -15,14 +17,15 @@ const courseDB = new CourseRepository();
 const counsultentDB = new ConsultancyRepository();
 const applicationDB = new ApplicationRepository();
 const countryDB = new CountriesRepository();
+const blogDB = new BlogRepository();
 
-export const createStudent = async (req, res , next) => {
+export const createStudent = async (req, res, next) => {
   try {
     const studentData = req.body;
 
     const emailPattern = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
     if (!emailPattern.test(studentData.email)) {
-      console.log('Invalid Email Address');
+      console.error('Invalid Email Address');
       return res.status(400).json({ error: 'Invalid Email Address' });
     }
 
@@ -32,26 +35,26 @@ export const createStudent = async (req, res , next) => {
     ]);
 
     if (existingUser) {
-      console.log("User Exists");
-      res.json({error:'Email Already Exists'})
+      console.error("User Exists");
+      res.json({ error: 'Email Already Exists' })
       return
     }
 
-    if(existingOtp){
+    if (existingOtp) {
       await OneTimePassword.deleteOtpByEmail(studentData.email)
     }
 
     const otp = Math.floor(1000 + Math.random() * 9000);
 
-    await OneTimePassword.createOtp(studentData.email,otp);
-    
-    studentData.password  = await secretHash(studentData.password);
-    
+    await OneTimePassword.createOtp(studentData.email, otp);
+
+    studentData.password = await secretHash(studentData.password);
+
     const newUser = await StudentDB.createStudentUser(studentData);
-    sendMail(newUser.email,otp);
+    sendMail(newUser.email, otp);
     res.status(201).json(newUser);
   } catch (error) {
-    // console.log(error);
+    console.error(error);
     next(error)
   }
 }
@@ -65,7 +68,7 @@ export const validateOtp = async (req, res, next) => {
 
     const emailPattern = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
     if (!emailPattern.test(email)) {
-      console.log('Invalid Email Address');
+      console.error('Invalid Email Address');
       return res.status(400).json({ error: 'Invalid Email Address' });
     }
 
@@ -75,18 +78,18 @@ export const validateOtp = async (req, res, next) => {
     ]);
 
     if (!user) {
-      console.log('no user');
+      console.error('no user');
       return res.status(404).json({ error: 'User not found' });
     }
 
     if (!storedOtp) {
-      console.log('no stored otp');
+      console.error('no stored otp');
       return res.status(400).json({ error: 'OTP not found. Please try again' });
     }
 
     if (storedOtp.otp !== otp) {
-       res.status(400).json({ error: 'Invalid OTP' });
-       return
+      res.status(400).json({ error: 'Invalid OTP' });
+      return
     }
 
     const currentDate = Date.now();
@@ -95,11 +98,11 @@ export const validateOtp = async (req, res, next) => {
       return res.status(401).json({ error: 'The OTP has expired' });
     }
     await Promise.all([
-      StudentDB.updateUserField(email, 'isVerified', true ),
+      StudentDB.updateUserField(email, 'isVerified', true),
       OneTimePassword.deleteOtpByEmail(email)
     ]);
     const jwtToken = generateToken(user, 'student');
-    res.status(200).json({ message: 'OTP validated successfully', token: jwtToken, user ,role:'student' });
+    res.status(200).json({ message: 'OTP validated successfully', token: jwtToken, user, role: 'student' });
 
   } catch (error) {
     console.error(error);
@@ -116,7 +119,7 @@ export const resend_otp = async (req, res, next) => {
     ]);
     const emailPattern = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
     if (!emailPattern.test(email)) {
-      console.log('Invalid Email Address');
+      console.error('Invalid Email Address');
       return res.status(400).json({ error: 'Invalid Email Address' });
     }
     if (!user) {
@@ -127,7 +130,7 @@ export const resend_otp = async (req, res, next) => {
     }
     const new_otp = Math.floor(1000 + Math.random() * 9000);
 
-    await  OneTimePassword.createOtp(user.email,new_otp);
+    await OneTimePassword.createOtp(user.email, new_otp);
 
     sendMail(user.email, new_otp);
     res.status(200).json({ message: 'OTP Resent Successfully' });
@@ -141,38 +144,37 @@ export const handleSignin = async (req, res, next) => {
   try {
     const userData = req.body;
     if (!userData.password || !userData.email) {
-      console.log('Invalid Data');
+      console.error('Invalid Data');
       return res.status(400).json({ error: 'Invalid Data' });
     }
     const emailPattern = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
     if (!emailPattern.test(userData.email)) {
-      console.log('Invalid Email Address');
+      console.error('Invalid Email Address');
       return res.status(400).json({ error: 'Invalid Email Address' });
     }
     const user = await StudentDB.getUserByEmail(userData.email);
-  
+
     if (!user) {
-      console.log('User not found');
+      console.error('User not found');
       return res.status(404).json({ message: 'User not found' });
     }
-    
+
     if (!user.isVerified) {
-      console.log('User not verified');
+      console.error('User not verified');
       return res.status(401).json({ message: 'User not verified' });
     }
 
     const passMatch = await compareSecret(userData.password, user.password);
-    // console.log(passMatch);
     if (passMatch) {
-      
-          if(user.isAdmin){
-            const jwtToken = generateToken(user, 'admin');
-            return res.status(200).json({ message: 'User signed in successfully', token:jwtToken , user , role:'admin' });
-          }
-          const jwtToken = generateToken(user, 'student');
-          return res.status(200).json({ message: 'User signed in successfully', token:jwtToken , user , role:'student' });
-    }else{
-      console.log('Invalid password');
+
+      if (user.isAdmin) {
+        const jwtToken = generateToken(user, 'admin');
+        return res.status(200).json({ message: 'User signed in successfully', token: jwtToken, user, role: 'admin' });
+      }
+      const jwtToken = generateToken(user, 'student');
+      return res.status(200).json({ message: 'User signed in successfully', token: jwtToken, user, role: 'student' });
+    } else {
+      console.error('Invalid password');
       return res.status(401).json({ message: 'Invalid password' });
     }
   } catch (error) {
@@ -183,8 +185,7 @@ export const handleSignin = async (req, res, next) => {
 
 export const loadProfile = async (req, res, next) => {
   try {
-    const email= req.user.email;
-    // console.log(req.user.email);
+    const email = req.user.email;
     const user = await StudentDB.getUserByEmail(email);
 
     if (user) {
@@ -199,47 +200,44 @@ export const loadProfile = async (req, res, next) => {
   }
 };
 
-export const updateProfile = async (req,res,next)=>{
+export const updateProfile = async (req, res, next) => {
   try {
     const studentData = req.body;
-    if(req.file){
-      // console.log('here ',req.file);
+    if (req.file) {
       studentData.profile_picture = req.file.filename
     }
     const email = req.user.email
 
-    const user = await StudentDB.updateStudentInfoByObject(email,studentData);
-    // console.log('update',req.file)
-    res.status(200).json({user,message:'Profile Updated Successfully'})
+    const user = await StudentDB.updateStudentInfoByObject(email, studentData);
+    res.status(200).json({ user, message: 'Profile Updated Successfully' })
   } catch (error) {
     console.error("Error while updating consultent profile:", error);
-  res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error" });
   }
 }
 
-export const list_courses = async (req,res) => {
+export const list_courses = async (req, res) => {
   try {
     const limit = 6
     const courses = await courseDB.getCourseAllCourses(limit);
-      res.status(200).json({ courses });
+    res.status(200).json({ courses });
   } catch (error) {
     console.error('Error while listing courses:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
 
-export const list_courses_by_creator = async (req,res) => {
+export const list_courses_by_creator = async (req, res) => {
   try {
 
     const id = req.query.id
-    const limit = id ? 0 : 6 ;
+    const limit = id ? 0 : 6;
     const sortCriteria = { createdAt: -1 };
-      const courses = await courseDB.findCoursesByCreator(id ,limit, sortCriteria);
-      // console.log(courses);
-    if(courses){
+    const courses = await courseDB.findCoursesByCreator(id, limit, sortCriteria);
+    if (courses) {
       res.status(200).json({ courses });
-    }else{
-      res.status(200).json({ message:"No Courses Added By Consultent" });
+    } else {
+      res.status(200).json({ message: "No Courses Added By Consultent" });
     }
   } catch (error) {
     console.error('Error while listing courses:', error);
@@ -247,9 +245,9 @@ export const list_courses_by_creator = async (req,res) => {
   }
 }
 
-export const list_consultencies = async (req,res) => {
-  try{
-    const consultents = await counsultentDB.getConsultantsForHome(3,{createdAt: -1});
+export const list_consultencies = async (req, res) => {
+  try {
+    const consultents = await counsultentDB.getConsultantsForHome(3, { createdAt: -1 });
     res.status(200).json({ consultents });
   } catch (error) {
     console.error('Error while listing courses:', error);
@@ -278,14 +276,13 @@ export const new_password = async (req, res) => {
   try {
     const { password } = req.body;
     const email = req.user.email;
-    // console.log(password);
     const hashPassword = await secretHash(password);
-    
+
     await StudentDB.updateUserField(email, 'password', hashPassword);
-    
+
     res.status(200).json({ message: 'Password updated successfully' });
   } catch (error) {
-    console.log('error setting new password')
+    console.error('error setting new password')
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -328,9 +325,8 @@ export const view_all_courses = async (req, res) => {
     const itemsPerPage = parseInt(limit, 10);
 
     const skipCount = (pageNumber - 1) * itemsPerPage;
-    
+
     const { courses, totalCoursesCount } = await courseDB.getCoursesByPage(skipCount, itemsPerPage);
-    // console.log(courses);    
     res.status(200).json({ courses, totalCoursesCount });
   } catch (error) {
     console.error('Error while viewing courses:', error);
@@ -338,20 +334,17 @@ export const view_all_courses = async (req, res) => {
   }
 };
 
-export const view_all_consultencies = async (req,res)=>{
+export const view_all_consultencies = async (req, res) => {
   try {
     const { page, limit } = req.query;
-    // console.log(page,limit);
     const pageNumber = parseInt(page, 10);
     const itemsPerPage = parseInt(limit, 10);
 
     const skipCount = (pageNumber - 1) * itemsPerPage;
-    // console.log('itemsPerPage',itemsPerPage);
-    if (skipCount < 0) { 
+    if (skipCount < 0) {
       throw new Error('Invalid page or limit parameters');
     }
     const { consultants, totalConsultantsCount } = await counsultentDB.getAllConsultantsByPage(skipCount, itemsPerPage);
-    console.log(consultants, totalConsultantsCount );
     res.status(200).json({ consultants, totalConsultantsCount });
   } catch (error) {
     console.error('Error while viewing Consultencies:', error);
@@ -359,56 +352,197 @@ export const view_all_consultencies = async (req,res)=>{
   }
 }
 
-export const home_countries = async (req,res)=>{
+export const home_countries = async (req, res) => {
   try {
     const countries = await countryDB.listLimitedCountries();
-    if(!countries){
-      res.status(404).json({message:'No countries Found'})
+    if (!countries) {
+      res.status(404).json({ message: 'No countries Found' })
     }
-    res.status(200).json({countries})
+    res.status(200).json({ countries })
   } catch (error) {
     console.error('Error listing Countries:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
 
-export const listAllCountries = async (req,res) => {
+export const listAllCountries = async (req, res) => {
   try {
     const { page, limit } = req.query;
     const pageNumber = parseInt(page, 10);
     const itemsPerPage = parseInt(limit, 10);
     const skipCount = (pageNumber - 1) * itemsPerPage;
-    const {countries ,totalCount} = await countryDB.getAllCountriesByPage(skipCount, itemsPerPage)
-    res.status(200).json({ countries ,totalCount });
+    const { countries, totalCount } = await countryDB.getAllCountriesByPage(skipCount, itemsPerPage)
+    res.status(200).json({ countries, totalCount });
   } catch (error) {
     console.error('Error listing All Countries:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
 
-export const getCountryCourse = async (req,res) =>{
+export const getCountryCourse = async (req, res) => {
   try {
-    const {countryID} = req.query
+    const { countryID } = req.query
     const courses = await courseDB.getCoursesByCountry(countryID)
-    res.status(200).json({courses})
+    res.status(200).json({ courses })
   } catch (error) {
     console.error('Error listing Courses By Countries :', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
 
-export const getApplications = async (req,res) => {
+export const getApplications = async (req, res) => {
   try {
     const email = req.user.email;
     const user = await StudentDB.findStudentInfoByEmail(email);
     const applications = await applicationDB.getApplicationsByStudent(user._id)
-    if(!applications){
+    if (!applications) {
       return res.status(404).json({ message: 'No Applications Found' });
     }
 
-    res.status(200).json({applications})
+    res.status(200).json({ applications })
   } catch (error) {
     console.error('Error listing Applications of specific Student:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
+export const studentProfileCourseStatus = async (req, res) => {
+
+  try {
+    const { courseID, studentID } = req.query;
+    const applied = await applicationDB.findIfStudentApplied(studentID, courseID);
+    res.status(200).json({ applied });
+  } catch (error) {
+    console.error('Error listing Applications of specific Student:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+
+}
+
+export const getChatOfUser = async (req, res) => {
+  try {
+    const { id } = req.query;
+    const chats = await messageRepository.getMessagesForUser(id);
+
+    const uniqueUserIds = new Set();
+
+    chats.forEach((chat) => {
+      uniqueUserIds.add(chat.sender.toString());
+      uniqueUserIds.add(chat.receiver.toString());
+    });
+
+    const otherUserIds = [...uniqueUserIds].filter((userId) => userId !== id);
+
+    const studentsPromise = StudentDB.findArrayOfStudents(otherUserIds);
+    const consultantsPromise = counsultentDB.findArrayOfConsultents(otherUserIds);
+
+    const [students, consultants] = await Promise.all([studentsPromise, consultantsPromise]);
+
+    const users = [...students, ...consultants];
+
+    res.status(200).json({ chats: users });
+  } catch (error) {
+    console.error('Error in getChatOfUser:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export const getUnreadMessageOfUsers = async (req, res) => {
+  try {
+    const { id } = req.query;
+    const unread = await messageRepository.findUnreadMessagesById(id)
+    res.status(200).json({ unread })
+  } catch (error) {
+    console.error('Error in getUnreadMessageOfUsers:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+export const markUnreadForChat = async (req, res) => {
+  try {
+    const { reciever, sender } = req.body;
+    await messageRepository.updateReadTrueForReciever(reciever, sender);
+    res.status(200)
+  } catch (error) {
+    console.error('Error marking messages as read:', error);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+}
+
+export const newBlogByStudent = async (req, res) => {
+  try {
+    const blog = req.body;
+    if (req.file) {
+      blog.image = req.file.filename
+    }
+    const newBlog = await blogDB.createBlog(blog)
+    res.status(200).json({ blog: newBlog, message: 'Blog Saved SuccessFully' })
+  } catch (error) {
+    if (error.code === 11000) {
+     return res.status(400).json({ message: 'Heading must be unique' });
+    }
+    console.error('Error saving new blog by student as read:', error);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+}
+
+export const getUserBlogs = async(req,res) => {
+  try {
+    const { id } = req.query;
+    const blogs = await blogDB.findBlogsByCreatorId(id);
+    res.status(200).json({blogs})
+  } catch (error) {
+    console.error('Error finding blogs by creator:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+export const editBlogByUser = async (req, res) => {
+  try {
+    const blogData = req.body;
+
+    if (req.file) {
+      blogData.image = req.file.filename;
+    }
+
+    const updatedBlog = await blogDB.updateBlog(blogData);
+
+    if (updatedBlog) {
+      res.status(200).json({ message: 'Updated blog successfully' });
+    } else {
+      res.status(404).json({ error: 'Blog not found' });
+    }
+  } catch (error) {
+    console.error('Error editing blogs:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export const getAllBlogsToList = async (req,res) => {
+  try {
+    const { page, limit ,search} = req.query;
+    const pageNumber = parseInt(page, 10);
+    const itemsPerPage = parseInt(limit, 10);
+    const skipCount = (pageNumber - 1) * itemsPerPage;
+    const { blogs,totalBlogsCount } = await blogDB.getAllBlogs(search,skipCount, itemsPerPage);
+    res.status(200).json({blogs,totalBlogsCount})
+  } catch (error) {
+    
+  }
+}
+
+export const getUnreadBetweenUsers = async (req, res) => {
+  try {
+    const { id, sender } = req.query;
+
+    if (!id || !sender) {
+      return res.status(400).json({ error: 'Bad Request. Missing required parameters.' });
+    }
+
+    const unreadCount = await messageRepository.findUnreadMessagesBetweenUsers(id, sender);
+    res.status(200).json({ unread: unreadCount });
+  } catch (error) {
+    console.error('Error in getUnreadBetweenUsers:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};

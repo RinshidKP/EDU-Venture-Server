@@ -7,6 +7,7 @@ import CourseRepository from '../../repository/courseReprository.js';
 import StudentRepository from '../../repository/studentRepository.js';
 import ApplicationRepository from '../../repository/applicationRepository.js';
 import CountriesRepository from '../../repository/countriesRepository.js';
+import messageRepository from '../../repository/chatRepository.js';
 
 
 const ConsultancyDB = new ConsultancyRepository();
@@ -22,7 +23,7 @@ export const createConsultancy = async (req, res , next) => {
 
     const emailPattern = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
     if (!emailPattern.test(consultencyData.email)) {
-      console.log('Invalid Email Address');
+      console.error('Invalid Email Address');
       return res.status(400).json({ error: 'Invalid Email Address' });
     }
 
@@ -32,7 +33,7 @@ export const createConsultancy = async (req, res , next) => {
     ]);
 
     if (existingUser) {
-      console.log("User Exists");
+      console.error("User Exists");
       res.json({error:'Email Already Exists'})
       return
     }
@@ -44,14 +45,13 @@ export const createConsultancy = async (req, res , next) => {
     const otp = Math.floor(1000 + Math.random() * 9000);
 
     await otpModel.createOtp(consultencyData.email,otp);
-    console.log(consultencyData.password);
     consultencyData.password  = await secretHash(consultencyData.password);
     
     const newUser = await ConsultancyDB.createConsultant(consultencyData);
     sendMail(newUser.email,otp);
     res.status(201).json(newUser);
   } catch (error) {
-    // console.log(error);
+    console.error(error);
     next(error)
   }
 }
@@ -65,7 +65,7 @@ export const validateOtp = async (req, res, next) => {
 
     const emailPattern = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
     if (!emailPattern.test(email)) {
-      console.log('Invalid Email Address');
+      console.error('Invalid Email Address');
       return res.status(400).json({ error: 'Invalid Email Address' });
     }
 
@@ -75,12 +75,12 @@ export const validateOtp = async (req, res, next) => {
     ]);
 
     if (!user) {
-      console.log('no user');
+      console.error('no user');
       return res.status(404).json({ error: 'User not found' });
     }
 
     if (!storedOtp) {
-      console.log('no stored otp');
+      console.error('no stored otp');
       return res.status(400).json({ error: 'OTP not found. Please try again' });
     }
 
@@ -116,7 +116,7 @@ export const resend_otp = async (req, res, next) => {
     ]);
     const emailPattern = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
     if (!emailPattern.test(email)) {
-      console.log('Invalid Email Address');
+      console.error('Invalid Email Address');
       return res.status(400).json({ error: 'Invalid Email Address' });
     }
     if (!user) {
@@ -141,38 +141,35 @@ export const handleSignin = async (req, res, next) => {
   try {
     const userData = req.body;
     if (!userData.password || !userData.email) {
-      console.log('Invalid Data');
+      console.error('Invalid Data');
       return res.status(400).json({ error: 'Invalid Data' });
     }
     const emailPattern = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
     if (!emailPattern.test(userData.email)) {
-      console.log('Invalid Email Address');
+      console.error('Invalid Email Address');
       return res.status(400).json({ error: 'Invalid Email Address' });
     }
     const user = await ConsultancyDB.getConsultantByEmail(userData.email);
   
     if (!user) {
-      console.log('User not found');
+      console.error('User not found');
       return res.status(404).json({ message: 'User not found' });
     }
     
     if (!user.isVerified) {
-      console.log('User not verified');
+      console.error('User not verified');
       return res.status(401).json({ message: 'User not verified' });
     }
     if (!user.isActive) {
-      console.log('Access Restricted Contact Admin');
+      console.error('Access Restricted Contact Admin');
       return res.status(401).json({ message: 'Access Restricted Contact Admin' });
     }
     const passMatch = await compareSecret(userData.password, user.password);
-    console.log(userData.password);
-    console.log(user.password);
-    console.log(passMatch);
     if (passMatch) {
           const jwtToken = generateToken(user, 'consultent');
           return res.status(200).json({ message: 'User signed in successfully',token:jwtToken ,user,role:'consultent' });
     }else{
-      console.log('Invalid password');
+      console.error('Invalid password');
       return res.status(401).json({ message: 'Invalid password' });
     }
   } catch (error) {
@@ -207,11 +204,9 @@ export const updateProfile = async (req,res,nect)=>{
       if(consultencyData.countries){
         let countriesString = consultencyData.countries; 
         let countries = countriesString.split(',').map((country) => country.trim());
-        console.log(countries);
         consultencyData.countries = countries
       }
       const user = await ConsultancyDB.updateConsultantInfoByObject(email,consultencyData);
-      console.log('update',req.file)
       res.status(200).json({user,message:'Profile Updated Successfully'})
     } catch (error) {
       console.error("Error while updating consultent profile:", error);
@@ -233,7 +228,6 @@ export const load_courses = async (req,res,next)=> {
 export const create_courses = async (req,res,next)=>{
   try {
     const courseData = req.body
-    console.log(req.body);
     if(!req.file||!req.file.filename){
       res.status(404).json({ error: "Image not found" });
     }
@@ -271,12 +265,19 @@ export const list_consultant_courses = async (req, res, next) => {
 export const updateCourse = async (req, res) => {
   try {
     const courseData = req.body;
-    console.log('Iam Here');
     if(req.file){
       courseData.course_image = req.file.filename
     }
+    console.log(courseData);
+    if (courseData.is_active === 'false') {
+      const studentsExist = await applicationDB.getApplicationsByCourse(courseData.id);
+    
+      if (studentsExist.length > 0) {
+        return res.status(409).json({ message: 'Cannot disable because users exist.' });
+      }
+    }
+    
     const newer = await courseDB.updateCourse(courseData.id, courseData);
-    console.log('Iam Here result is ',newer);
     res.status(200).json({ message: 'Course updated successfully' });
   } catch (error) {
     console.error('Error updating course:', error);
@@ -290,7 +291,6 @@ export const forgot_password = async (req,res) => {
     const userData = req.body ;
     
     const user = await ConsultancyDB.getConsultantByEmail(userData.email)
-    console.log(user);
     if(!user){
       return res.status(404).json({message:'User Not Found'})
     }
@@ -311,14 +311,13 @@ export const new_password = async (req, res) => {
   try {
     const { password } = req.body;
     const email = req.user.email;
-    console.log(password);
     const hashPassword = await secretHash(password);
     
     await ConsultancyDB.updateConsultant(email, 'password', hashPassword);
     
     res.status(200).json({ message: 'Password updated successfully' });
   } catch (error) {
-    console.log('error setting new password')
+    console.error('error setting new password')
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -327,13 +326,11 @@ export const loadStudents = async (req, res) => {
   try {
     const email = req.user.email; 
     const consultant = await ConsultancyDB.getConsultantByEmail(email);
-    console.log(consultant);
     if (!consultant) {
       return res.status(404).json({ message: 'Consultant not found' });
     }
 
     const students = await applicationDB.findApplicationsByCourseCreator(consultant._id);
-    console.log(students);
     res.status(200).json({ students });
   } catch (error) {
     console.error('Error while loading students:', error);
@@ -372,10 +369,80 @@ export const declineStudent = async (req,res)=>{
       applicationDB.updateApplication(id, { status: 'Rejected' }),
       applicationDB.getApplicationById(id),
     ]);
-    console.log(studentData);
     res.status(200).json({message:'Rejected Successfully',studentData})
   } catch (error) {
     console.error('Error while Declining Student:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
+export const getChatOfUser = async (req,res) => {
+  try {
+    const {id} = req.query;
+    const chats = await messageRepository.getMessagesForUser(id);
+    
+    const uniqueUserIds = new Set();
+
+    chats.forEach((chat) => {
+      uniqueUserIds.add(chat.sender.toString());
+      uniqueUserIds.add(chat.receiver.toString());
+    });
+
+    const otherUserIds = [...uniqueUserIds].filter((userId) => userId !== id);
+
+    const studentsPromise = studentDB.findArrayOfStudents(otherUserIds);
+    const consultantsPromise = ConsultancyDB.findArrayOfConsultents(otherUserIds);
+
+    const [students, consultants] = await Promise.all([studentsPromise, consultantsPromise]);
+    
+    const users = [...students, ...consultants];
+
+    // for (const user of users) {
+    //   const unreadCount = await messageRepository.findUnreadMessagesBetweenUsers(id, user._id);
+    //   user.unread = unreadCount;
+    // }
+
+    res.status(200).json({ chats: users });
+  } catch (error) {
+    console.error('Error in getChatOfUser:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+export const getUnreadMessageOfUsers = async(req,res) => {
+  try {
+    const { id } =req.query;
+    const unread = await messageRepository.findUnreadMessagesById(id)
+    res.status(200).json({unread})
+  } catch (error) {
+    console.error('Error in getUnreadMessageOfUsers:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+export const markUnreadForChat = async (req,res) => {
+  try {
+    const {reciever,sender} = req.body;
+    await messageRepository.updateReadTrueForReciever(reciever,sender);
+    res.status(200)
+  } catch (error) {
+    console.error('Error marking messages as read:', error);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+}
+
+export const getUnreadBetweenUsers = async (req, res) => {
+  try {
+    const { id, sender } = req.query;
+
+    if (!id || !sender) {
+      return res.status(400).json({ error: 'Bad Request. Missing required parameters.' });
+    }
+
+    const unreadCount = await messageRepository.findUnreadMessagesBetweenUsers(id, sender);
+    res.status(200).json({ unread: unreadCount });
+  } catch (error) {
+    console.error('Error in getUnreadBetweenUsers:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};

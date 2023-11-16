@@ -1,4 +1,5 @@
 import ApplicationModel from "../models/applicationSchema.js";
+import Country from "../models/countriesSchema.js";
 import StudentModel from "../models/studentSchema.js";
 
 class ApplicationRepository {
@@ -57,10 +58,16 @@ class ApplicationRepository {
     }
   }
 
-  // Get all applications for a specific student
   async getApplicationsByStudent(studentId) {
     try {
-      const applications = await ApplicationModel.find({ student: studentId }).populate('course');
+      const applications = await ApplicationModel.find({ student: studentId })
+      .populate({
+        path: 'course',
+        populate: {
+          path: 'country',
+          model: Country,
+        },
+      });
       return applications;
     } catch (error) {
       throw error;
@@ -113,6 +120,30 @@ class ApplicationRepository {
       throw error;
     }
   }
+
+  async findIfStudentApplied (studentId, courseId) {
+    try {
+      const result = await ApplicationModel.find({
+        student: studentId,
+        course: courseId,
+      });
+      
+      if (result.length > 0) {
+        return result;
+      } else {
+        return false;
+      }
+      
+    } catch (error) {
+      console.error('Error finding application:', error);
+    }
+  };
+  
+  
+  
+  
+  
+  
 }
 
 export default ApplicationRepository;

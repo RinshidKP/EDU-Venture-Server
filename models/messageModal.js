@@ -15,11 +15,18 @@ const messageSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  read: {
+    type: Boolean,
+    default: false,
+  },
   date: {
     type: Date,
+    index:true,
     default: Date.now,
   },
 });
+
+messageSchema.index({ sender: 1, receiver: 1 });
 
 const Message = mongoose.model('Message', messageSchema);
 

@@ -8,24 +8,33 @@ const consultentDB = new ConsultancyRepository();
 const countryDB = new CountriesRepository();
 const courseDB = new CourseRepository();
 
-export const adminDashboard = async (req,res) => {
-    try {
-        const email = req.user.email;
-        if(!email){
-            res.status(400).json({error:'Admin Not Found'})
-        }
-        const students = await studentDB.listStudentsForAdmin()
-        res.json({students})
-    } catch (error) {
-        
+export const studentsDatas = async (req, res) => {
+  try {
+    const { page, limit, search } = req.query;
+    const email = req.user.email;
+    if (!email) {
+      res.status(400).json({ error: 'Admin Not Found' });
     }
-}
+    const pageNumber = parseInt(page, 10);
+    const itemsPerPage = parseInt(limit, 10);
+    const skipCount = (pageNumber - 1) * itemsPerPage;
+    const { students, totalStudentsCount } = await studentDB.listStudentsForAdmin(
+      search,
+      skipCount,
+      itemsPerPage
+    );
+    res.json({ students, totalStudentsCount });
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
 export const createCountry = async (req, res) => {
     try {
       const countryData = req.body;
       countryData.image = req.file.filename;
-      console.log('adding...');
+      // console.log('adding...');
       const existingCountry = await countryDB.findCountryByName(countryData.name);
   
       if (existingCountry) {
@@ -98,12 +107,11 @@ export const disableCountryById = async (req,res) => {
 
 export const getConsultentData = async (req,res)=>{
   try {
-    const { page, limit } = req.query;
+    const { page, limit ,search} = req.query;
     const pageNumber = parseInt(page, 10);
     const itemsPerPage = parseInt(limit, 10);
     const skipCount = (pageNumber - 1) * itemsPerPage;
-    const { consultents , totalConsultantsCount } = await consultentDB.getAllConsultants(skipCount, itemsPerPage);
-    
+    const { consultents , totalConsultantsCount } = await consultentDB.getAllConsultants(search,skipCount, itemsPerPage);
     if(!consultents){
       return res.status(404).json({message:'consultents not found'})
     }
@@ -145,5 +153,22 @@ export const changeConsultencyAccess = async (req, res) => {
   } catch (error) {
       console.error('Error changing consultant access:', error);
       res.status(500).json({ message: 'An error occurred while changing consultant access' });
+  }
+}
+
+export const changeStudentAccess = async (req,res)=> {
+  try {
+    const { id } = req.body;
+    const student = await studentDB.updateStudentAccessById(id);
+
+    if (!student) {
+      return res.status(400).json({ message: 'student not Found' });
+    }
+
+    res.status(200).json({student})
+
+  } catch (error) {
+    console.error('Error changing student access:', error);
+    res.status(500).json({ message: 'An error occurred while changing student access' });
   }
 }

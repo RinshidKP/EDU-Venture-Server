@@ -40,6 +40,7 @@ const courseSchema = new mongoose.Schema({
   },
   country: {
     type: mongoose.Schema.Types.ObjectId, 
+    // ref: 'Country',
     required: true,
   },
   creator_id: {
