@@ -31,7 +31,7 @@ class CountriesRepository {
     }
     async listLimitedCountries() {
       try {
-        const countries = await Country.find().limit(3).sort({createdDate:-1})
+        const countries = await Country.find({isActive:true}).limit(3).sort({createdDate:-1})
         return countries ? countries : false
       } catch (error) {
         throw new Error(`Failed to list limited Countries :${error.message}`)

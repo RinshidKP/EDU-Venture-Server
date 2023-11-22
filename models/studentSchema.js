@@ -17,8 +17,14 @@ const studentSchema = new Schema({
         required: true,
     },
     profile_picture: {
-        type: String,
-        default: '',
+        public_id: {
+            type: String,
+            default: '',
+          },
+          url: {
+            type: String,
+            default: '',
+          },
     },
     isAdmin: {
         type: Boolean,

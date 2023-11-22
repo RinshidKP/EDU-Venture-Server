@@ -9,6 +9,7 @@ import ApplicationRepository from '../../repository/applicationRepository.js';
 import CountriesRepository from '../../repository/countriesRepository.js';
 import messageRepository from '../../repository/chatRepository.js';
 import BlogRepository from '../../repository/blogRepository.js';
+import imageCloudUpload from '../../helper/couldUpload.js';
 
 
 const StudentDB = new StudentRepository();
@@ -204,7 +205,8 @@ export const updateProfile = async (req, res, next) => {
   try {
     const studentData = req.body;
     if (req.file) {
-      studentData.profile_picture = req.file.filename
+      // studentData.profile_picture = req.file.filename
+      studentData.profile_picture = await imageCloudUpload(req.file)
     }
     const email = req.user.email
 
@@ -304,9 +306,13 @@ export const apply_new_course = async (req, res) => {
       return res.status(200).json({ message: 'Student Already Applied' });
     }
 
-    const courseApplied = await applicationDB.createApplication(student._id, id);
+    const [createdApplication, updatedStudent] = await Promise.all([
+      applicationDB.createApplication(student._id, id),
+      StudentDB.addCourseToStudent(student.email,id )
+    ]);
+    console.log(updatedStudent);
 
-    if (courseApplied) {
+    if (createdApplication) {
       return res.status(200).json({ message: "Course applied Successfully" });
     } else {
       return res.status(500).json({ message: "Something Went Wrong" });

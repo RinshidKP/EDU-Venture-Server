@@ -22,7 +22,7 @@ router.post('/add_contries',verify,uploadImage,createCountry);
 router.post('/update_countries',verify,uploadImage,updateCountryData);
 router.post('/disable_country',verify,disableCountryById);
 router.post('/consultant_access',verify,changeConsultencyAccess);   
-router.post('/students_access',verify,changeStudentAccess);   
+router.post('/students_access',verify,changeStudentAccess);
 
 
 export default router;

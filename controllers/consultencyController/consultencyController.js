@@ -8,7 +8,7 @@ import StudentRepository from '../../repository/studentRepository.js';
 import ApplicationRepository from '../../repository/applicationRepository.js';
 import CountriesRepository from '../../repository/countriesRepository.js';
 import messageRepository from '../../repository/chatRepository.js';
-
+import imageCloudUpload from '../../helper/couldUpload.js'
 
 const ConsultancyDB = new ConsultancyRepository();
 const otpModel = new OtpRepository();
@@ -198,7 +198,10 @@ export const updateProfile = async (req,res,nect)=>{
     try {
       const consultencyData = req.body;
       if(req.file){
-        consultencyData.profile_image = req.file.filename
+        // consultencyData.profile_image = req.file.filename;
+        const image = await imageCloudUpload(req.file);
+        consultencyData.profile_image = image
+        // console.log(image);
       }
       const email = req.user.email
       if(consultencyData.countries){
@@ -233,7 +236,8 @@ export const create_courses = async (req,res,next)=>{
     }
     const user = await ConsultancyDB.getConsultantByEmail(req.user.email)
     courseData.creator_id = user._id
-    courseData.course_image=req.file.filename
+    courseData.course_image = await imageCloudUpload(req.file)
+    // courseData.course_image=req.file.filename
     const newCourse = await courseDB.createCourse(courseData)
     res.status(201).json(newCourse);
   } catch (error) { 
@@ -266,9 +270,10 @@ export const updateCourse = async (req, res) => {
   try {
     const courseData = req.body;
     if(req.file){
-      courseData.course_image = req.file.filename
+      // courseData.course_image = req.file.filename
+      courseData.course_image = await imageCloudUpload(req.file)
     }
-    console.log(courseData);
+    // console.log(courseData);
     if (courseData.is_active === 'false') {
       const studentsExist = await applicationDB.getApplicationsByCourse(courseData.id);
     

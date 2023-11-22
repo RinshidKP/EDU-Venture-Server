@@ -2,8 +2,14 @@ import mongoose from 'mongoose';
 
 const countrySchema = new mongoose.Schema({
   image: {
-    type: String,
-    required: true,
+    public_id: {
+      type: String,
+      default: '',
+    },
+    url: {
+      type: String,
+      default: '',
+    },
   },
   name: {
     type: String,

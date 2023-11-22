@@ -1,3 +1,4 @@
+import imageCloudUpload from "../../helper/couldUpload.js";
 import ConsultancyRepository from "../../repository/consultentReprository.js";
 import CountriesRepository from "../../repository/countriesRepository.js";
 import CourseRepository from "../../repository/courseReprository.js";
@@ -33,7 +34,8 @@ export const studentsDatas = async (req, res) => {
 export const createCountry = async (req, res) => {
     try {
       const countryData = req.body;
-      countryData.image = req.file.filename;
+      // countryData.image = req.file.filename;
+      countryData.image = await imageCloudUpload(req.file)
       // console.log('adding...');
       const existingCountry = await countryDB.findCountryByName(countryData.name);
   
@@ -78,9 +80,10 @@ export const createCountry = async (req, res) => {
 
   export const updateCountryData = async (req,res) => {
     try {
-      const { id ,countryData} = req.body;
+      const  countryData = req.body;
+      const id = countryData.id
       if(req.file){
-        countryData.image = req.file.filename
+        countryData.image = await imageCloudUpload(req.file)
       }
       const updateCountry = await countryDB.updateCountryByID(id,countryData);
       res.status(200).json({ updateCountry });

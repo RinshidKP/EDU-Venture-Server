@@ -35,9 +35,10 @@ class ConsultancyRepository {
     }
   }
 
-  async getConsultantsForHome(skip = 0, sort = { createdAt: 1 }) {
+  async getConsultantsForHome(limit,skip = 0, sort = { createdAt: 1 }) {
     try {
       const consultants = await Consultancy.find({ isVerified: true, isActive: true })
+        .limit(limit)
         .skip(skip)
         .sort(sort);
       return consultants;

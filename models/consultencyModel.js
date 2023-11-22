@@ -14,8 +14,14 @@ const consultancySchema = new Schema({
         unique: true,
     },
     profile_image: {
-        type: String,
-        default: '',
+        public_id: {
+            type: String,
+            default: '',
+          },
+          url: {
+            type: String,
+            default: '',
+          },
     },
     password: {
         type: String,

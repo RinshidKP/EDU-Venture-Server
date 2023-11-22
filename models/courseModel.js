@@ -6,7 +6,14 @@ const courseSchema = new mongoose.Schema({
     required: true,
   },
   course_image: {
-    type: String,
+    public_id: {
+      type: String,
+      default: '',
+    },
+    url: {
+      type: String,
+      default: '',
+    },
   },
   short_blob: {
     type: String,
@@ -29,7 +36,7 @@ const courseSchema = new mongoose.Schema({
   },
   approved: {
     type: Boolean,
-    default: false,
+    default: true,
   },
   is_active: {
     type: Boolean,
