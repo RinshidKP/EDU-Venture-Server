@@ -1,5 +1,8 @@
 import CourseModel from '../models/courseModel.js'
 import Country from '../models/countriesSchema.js';
+import { Types } from 'mongoose';
+
+const { ObjectId } = Types;
 class CourseRepository {
 
    async createCourse(courseData) {
@@ -96,14 +99,26 @@ class CourseRepository {
   }
   
 
-  async getCoursesByPage(skip, limit, sortCriteria = { createdAt: -1 }) {
+  async getCoursesByPage(skip, limit ,filterCountries ,search, sortCriteria = { createdAt: -1 }) {
     try {
+
+      const matchStage = {
+        is_active: true,
+        approved: true,
+      };
+
+      if (search && search.trim()) {
+        matchStage.header = { $regex: new RegExp(search.trim(), 'i') };
+      }      
+  
+      if (filterCountries.length > 0) {
+        matchStage.country = { $in: filterCountries.map(id => new ObjectId(id)) }
+        // console.log('Match stage with country filter:', matchStage);
+      }  
+
       const aggregationPipeline = [
         {
-          $match: {
-            is_active: true,
-            approved: true,
-          },
+          $match: matchStage,
         },
         {
           $facet: {

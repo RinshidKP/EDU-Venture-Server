@@ -249,7 +249,7 @@ export const list_courses_by_creator = async (req, res) => {
 
 export const list_consultencies = async (req, res) => {
   try {
-    const consultents = await counsultentDB.getConsultantsForHome(3, { createdAt: -1 });
+    const consultents = await counsultentDB.getConsultantsForHome(9, { createdAt: -1 });
     res.status(200).json({ consultents });
   } catch (error) {
     console.error('Error while listing courses:', error);
@@ -325,15 +325,24 @@ export const apply_new_course = async (req, res) => {
 
 export const view_all_courses = async (req, res) => {
   try {
-    const { page, limit } = req.query;
+    const { page, limit ,filter ,search } = req.query;
 
     const pageNumber = parseInt(page, 10);
     const itemsPerPage = parseInt(limit, 10);
-
+    // console.log('search...',search);
     const skipCount = (pageNumber - 1) * itemsPerPage;
+    const filterArray = Array.isArray(filter) ? filter : filter ? [filter] : [];
+    
+    const getCoursesPromise = courseDB.getCoursesByPage(skipCount, itemsPerPage ,filterArray,search);
+    const getAllCountriesPromise = countryDB.getAllCountries();
 
-    const { courses, totalCoursesCount } = await courseDB.getCoursesByPage(skipCount, itemsPerPage);
-    res.status(200).json({ courses, totalCoursesCount });
+    const [coursesResult, countriesResult] = await Promise.all([getCoursesPromise, getAllCountriesPromise]);
+
+    const { courses, totalCoursesCount } = coursesResult;
+    const countries = countriesResult;
+
+    res.status(200).json({ courses, totalCoursesCount ,countries});
+
   } catch (error) {
     console.error('Error while viewing courses:', error);
     res.status(500).json({ error: 'Internal Server Error' });
