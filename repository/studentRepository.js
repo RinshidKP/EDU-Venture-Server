@@ -174,8 +174,27 @@ class StudentRepository {
         throw error;
       }
     }
+
+    async findStudentWithId(id) {
+      try {
+        const student = await StudentModel.findById(id);
+        if (student) {
+          return student
+        } else {
+          return false;
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
     
-    
+    async totalStudentsCount(){
+      try {
+        return await StudentModel.countDocuments({isAdmin:false})
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
     
 }
 

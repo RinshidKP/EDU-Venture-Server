@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
 
-export const generateToken = (user,role) => {
+export const generateToken = (user) => {
   const secretKey = process.env.JWT_SECRET; 
   const payload = {
-    role,
+    role: user.role,
     name: user.username,
     email: user.email,
   };
@@ -15,10 +15,11 @@ export const generateToken = (user,role) => {
 
 export const verify = (req, res, next) => {
   try {
+    // console.log(req);
     const token = req.header('Authorization');
     const userRole = req.header('userRole'); 
-    // console.log('here',token);
-    // console.log('User Role:', userRole);
+    // console.log('Authorization:',token); 
+    // console.log('userRole:', userRole);
     
     if (token) {
       const secretKey = process.env.JWT_SECRET;

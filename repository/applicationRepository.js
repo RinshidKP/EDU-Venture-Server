@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import ApplicationModel from "../models/applicationSchema.js";
 import Country from "../models/countriesSchema.js";
 import StudentModel from "../models/studentSchema.js";
@@ -140,6 +141,107 @@ class ApplicationRepository {
   };
   
   
+  async getApplicationCountByCreatorId(creatorId) {
+    try {
+      const applicationCount = await ApplicationModel.aggregate([
+        {
+          $lookup: {
+            from: 'courses',
+            localField: 'course',
+            foreignField: '_id',
+            as: 'course',
+          },
+        },
+        {
+          $match: {
+            'course.creator_id': new mongoose.mongo.ObjectId(creatorId),
+          },
+        },
+        {
+          $count: 'applicationCount',
+        },
+      ]);
+  
+      return applicationCount.length > 0 ? applicationCount[0].applicationCount : 0;
+    } catch (error) {
+      console.error('Error in getApplicationCountByCreatorId:', error);
+      throw error;
+    }
+  }
+  async getAcceptedStudentsCountByCreatorId(creatorId) {
+    try {
+      const acceptedStudentsCount = await ApplicationModel.aggregate([
+        {
+          $lookup: {
+            from: 'courses',
+            localField: 'course',
+            foreignField: '_id',
+            as: 'course',
+          },
+        },
+        {
+          $match: {
+            'course.creator_id': new mongoose.mongo.ObjectId(creatorId),
+            status: 'Accepted',
+          },
+        },
+        {
+          $count: 'acceptedStudentsCount',
+        },
+      ]);
+  
+      return acceptedStudentsCount.length > 0 ? acceptedStudentsCount[0].acceptedStudentsCount : 0;
+    } catch (error) {
+      console.error('Error in getAcceptedStudentsCountByCreatorId:', error);
+      throw error;
+    }
+  }
+  
+  async getAllPendingApplicationsByCreatorId(creatorId) {
+    try {
+      const pendingApplications = await ApplicationModel.aggregate([
+        {
+          $lookup: {
+            from: 'courses',
+            localField: 'course',
+            foreignField: '_id',
+            as: 'course',
+          },
+        },
+        {
+          $lookup: {
+            from: 'students',
+            localField: 'student',
+            foreignField: '_id',
+            as: 'student',
+          },
+        },
+        {
+          $match: {
+            'course.creator_id': new mongoose.mongo.ObjectId(creatorId),
+            status: 'Pending',
+          },
+        },
+        {
+          $project: {
+            course: {
+              $arrayElemAt: ['$course', 0], // Extract the first element of the 'course' array
+            },
+            student: {
+              $arrayElemAt: ['$student', 0], // Extract the first element of the 'student' array
+            },
+            status: 1,
+            additionalNotes: 1,
+          },
+        },
+      ]);
+  
+      return pendingApplications;
+    } catch (error) {
+      console.error('Error in getAllPendingApplicationsByCreatorId:', error);
+      throw error;
+    }
+  }
   
   
   

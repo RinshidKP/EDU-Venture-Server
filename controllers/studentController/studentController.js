@@ -167,13 +167,8 @@ export const handleSignin = async (req, res, next) => {
 
     const passMatch = await compareSecret(userData.password, user.password);
     if (passMatch) {
-
-      if (user.isAdmin) {
-        const jwtToken = generateToken(user, 'admin');
-        return res.status(200).json({ message: 'User signed in successfully', token: jwtToken, user, role: 'admin' });
-      }
-      const jwtToken = generateToken(user, 'student');
-      return res.status(200).json({ message: 'User signed in successfully', token: jwtToken, user, role: 'student' });
+      const jwtToken = generateToken(user);
+      return res.status(200).json({ message: 'User signed in successfully', token: jwtToken, user, role:user.role });
     } else {
       console.error('Invalid password');
       return res.status(401).json({ message: 'Invalid password' });
@@ -231,21 +226,27 @@ export const list_courses = async (req, res) => {
 
 export const list_courses_by_creator = async (req, res) => {
   try {
-
-    const id = req.query.id
-    const limit = id ? 0 : 6;
+    const id = req.query.id;
+    const limit = 6;
     const sortCriteria = { createdAt: -1 };
     const courses = await courseDB.findCoursesByCreator(id, limit, sortCriteria);
-    if (courses) {
-      res.status(200).json({ courses });
+    
+    if (courses.length > 0) {
+      const updatedCourses = courses.map(course => ({
+        ...course.toObject(),
+        creator: course.creator_id, 
+        countryInfo: course.country,
+      }));
+      res.status(200).json({ courses: updatedCourses });
     } else {
-      res.status(200).json({ message: "No Courses Added By Consultent" });
+      res.status(200).json({ message: "No Courses Added By Consultant" });
     }
   } catch (error) {
     console.error('Error while listing courses:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
-}
+};
+
 
 export const list_consultencies = async (req, res) => {
   try {
@@ -310,7 +311,6 @@ export const apply_new_course = async (req, res) => {
       applicationDB.createApplication(student._id, id),
       StudentDB.addCourseToStudent(student.email,id )
     ]);
-    console.log(updatedStudent);
 
     if (createdApplication) {
       return res.status(200).json({ message: "Course applied Successfully" });
@@ -447,15 +447,33 @@ export const getChatOfUser = async (req, res) => {
     });
 
     const otherUserIds = [...uniqueUserIds].filter((userId) => userId !== id);
-
     const studentsPromise = StudentDB.findArrayOfStudents(otherUserIds);
     const consultantsPromise = counsultentDB.findArrayOfConsultents(otherUserIds);
-
+    
     const [students, consultants] = await Promise.all([studentsPromise, consultantsPromise]);
-
+    
     const users = [...students, ...consultants];
-
-    res.status(200).json({ chats: users });
+    
+    
+    // console.log('users',users);
+    // console.log(latestMessages);
+    const userPromises = users.map(async user => {
+      const userLatestMessage = await messageRepository.getMessagesForUser(id, user._id);
+      const newlatestMessage = userLatestMessage.find(msg => {
+        return (
+          (msg.sender.toString() === id.toString() && msg.receiver.toString() === user._id.toString()) ||
+          (msg.sender.toString() === user._id.toString() && msg.receiver.toString() === id.toString())
+        );
+      });
+      return {
+        ...user.toObject(),
+        latestMessage: newlatestMessage || null,
+      };
+    });
+    
+    
+      const usersWithMessages = await Promise.all(userPromises);
+    res.status(200).json({ chats: usersWithMessages });
   } catch (error) {
     console.error('Error in getChatOfUser:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -561,3 +579,25 @@ export const getUnreadBetweenUsers = async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+export const recieverDetailsId = async (req,res) => {
+  try {
+    
+    const {id} = req.query ;
+    const [student,consultant] = await Promise.all([
+      StudentDB.findStudentWithId(id),
+      counsultentDB.findConsultentById(id),
+    ]);
+
+    const result = consultant|| student ;
+
+    if(!result){
+      return res.status(404).json({message:'Something went wrong User not Found'})
+    }
+
+    res.status(200).json({user:result})
+  } catch (error) {
+    console.error('Error in recieverDetailsId:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}

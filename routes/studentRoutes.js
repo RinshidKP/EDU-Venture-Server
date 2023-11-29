@@ -21,7 +21,8 @@ import {
     getUserBlogs,
     editBlogByUser,
     getAllBlogsToList,
-    getUnreadBetweenUsers
+    getUnreadBetweenUsers,
+    recieverDetailsId
 } from '../controllers/studentController/studentController.js';
 import { verify } from "../middleware/auth.js";
 import uploadImage from "../helper/multer.js";
@@ -61,6 +62,7 @@ router.get('/chat_list',verify,getChatOfUser);
 router.get('/unread_messages',verify,getUnreadMessageOfUsers);
 router.post('/mark_read',verify,markUnreadForChat);
 router.get(`/unread_between_users`,verify,getUnreadBetweenUsers);
+router.get(`/reciever_details`,verify,recieverDetailsId);
 
 
 export default router;

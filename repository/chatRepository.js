@@ -23,7 +23,7 @@ const messageRepository = {
             { sender: userId},
             { receiver: userId },
           ],
-        })
+        }).sort({date:-1})
         return messages ? messages : []; 
       } catch (error) {
         console.error('Error in getMessagesForUser:', error);
@@ -40,8 +40,7 @@ const messageRepository = {
             ],
           })
           .sort({ date: -1 }) 
-          .limit(10);        
-          
+          .limit(10)
           return messages ? messages.reverse() : []; 
         } catch (error) {
           throw error;
@@ -110,8 +109,11 @@ const messageRepository = {
           throw error;
         }
       },
-      
 
+
+      
+      
+      
   };
 
 export default messageRepository;

@@ -46,6 +46,10 @@ const consultancySchema = new Schema({
         type: Date,
         default: Date.now,
     },
+    role: {
+        type: String,
+        default:'consultant'
+    }
 });
 
 const Consultancy = model('Consultancy', consultancySchema);

@@ -40,7 +40,7 @@ router.get('/messages/:user1/:user2', async (req, res) => {
        return res.status(400).json({message:'No message Found'})
     }
     // console.log(messages);
-    res.status(200).json(messages);
+    res.status(200).json({messages});
   } catch (error) {
     res.status(500).json({ error: 'Error finding messages' });
   }

@@ -26,10 +26,6 @@ const studentSchema = new Schema({
             default: '',
           },
     },
-    isAdmin: {
-        type: Boolean,
-        default: false,
-    },
     isActive: {
         type: Boolean,
         default: true,
@@ -63,6 +59,10 @@ const studentSchema = new Schema({
         type: Date,
         default: Date.now,
         required: true,
+    },
+    role: {
+        type: String,
+        default:'student'
     }
 });
 

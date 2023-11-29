@@ -175,3 +175,19 @@ export const changeStudentAccess = async (req,res)=> {
     res.status(500).json({ message: 'An error occurred while changing student access' });
   }
 }
+
+export const getDashboardDetails = async (req, res) => {
+  try {
+    const [studentsCount, consultantsCount, courseCount, countriesWithCourseCount,unApprovedConsultants] = await Promise.all([
+      studentDB.totalStudentsCount(),
+      consultentDB.totalConsultantsCount(),
+      courseDB.totalCourseCount(),
+      countryDB.getCountriesWithCourseCount(),
+      consultentDB.findUnApprovedConsultants(),
+    ]);
+    res.status(200).json({ studentsCount, consultantsCount, courseCount, countriesWithCourseCount ,unApprovedConsultants});
+  } catch (error) {
+    console.error('Error Getting Dashboard Details:', error);
+    res.status(500).json({ message: 'An error occurred while Getting Dashboard Details' });
+  }
+};

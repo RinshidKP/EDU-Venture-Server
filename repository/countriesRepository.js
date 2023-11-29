@@ -31,7 +31,7 @@ class CountriesRepository {
     }
     async listLimitedCountries() {
       try {
-        const countries = await Country.find({isActive:true}).limit(3).sort({createdDate:-1})
+        const countries = await Country.find({isActive:true}).limit(4).sort({createdDate:-1})
         return countries ? countries : false
       } catch (error) {
         throw new Error(`Failed to list limited Countries :${error.message}`)
@@ -101,7 +101,47 @@ class CountriesRepository {
         
       }
     }
-      
+    async getCountriesWithCourseCount() {
+      try {
+        const aggregationPipeline = [
+          {
+            $match: {
+              isActive: true,
+            },
+          },
+          {
+            $lookup: {
+              from: 'courses', // Collection name for courses
+              localField: '_id',
+              foreignField: 'country',
+              as: 'courses',
+            },
+          },
+          {
+            $addFields: {
+              courseCount: { $size: '$courses' },
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              isActive: 1,
+              description: 1,
+              createdDate: 1,
+              image: 1,
+              courseCount: 1,
+            },
+          },
+        ];
+  
+        const countriesWithCourseCount = await Country.aggregate(aggregationPipeline);
+  
+        return countriesWithCourseCount;
+      } catch (error) {
+        throw error;
+      }
+    }
   }
   
 

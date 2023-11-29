@@ -12,6 +12,8 @@ import {
     acceptStudent, declineStudent, getChatOfUser,
     getUnreadMessageOfUsers, markUnreadForChat,
     getUnreadBetweenUsers,
+    recieverDetailsId,
+    getDashboardDetails,
 } from '../controllers/consultencyController/consultencyController.js'
 import uploadImage from "../helper/multer.js";
 const router = express.Router()
@@ -43,6 +45,8 @@ router.get('/unread_messages', verify, getUnreadMessageOfUsers);
 router.post('/mark_read', verify, markUnreadForChat);
 router.get('/chat_list', verify, getChatOfUser);
 router.get(`/unread_between_users`, verify, getUnreadBetweenUsers);
+router.get(`/reciever_details`,verify,recieverDetailsId);
+router.get(`/consultant_dashboard`,verify,getDashboardDetails);
 
 
 

@@ -402,12 +402,24 @@ export const getChatOfUser = async (req,res) => {
     
     const users = [...students, ...consultants];
 
-    // for (const user of users) {
-    //   const unreadCount = await messageRepository.findUnreadMessagesBetweenUsers(id, user._id);
-    //   user.unread = unreadCount;
-    // }
+    const userPromises = users.map(async user => {
+      const userLatestMessage = await messageRepository.getMessagesForUser(id, user._id);
+      const newlatestMessage = userLatestMessage.find(msg => {
+        return (
+          (msg.sender.toString() === id.toString() && msg.receiver.toString() === user._id.toString()) ||
+          (msg.sender.toString() === user._id.toString() && msg.receiver.toString() === id.toString())
+        );
+      });
+      return {
+        ...user.toObject(),
+        latestMessage: newlatestMessage || null,
+      };
+    });
+    
+    
+      const usersWithMessages = await Promise.all(userPromises);
 
-    res.status(200).json({ chats: users });
+    res.status(200).json({ chats: usersWithMessages });
   } catch (error) {
     console.error('Error in getChatOfUser:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -449,5 +461,44 @@ export const getUnreadBetweenUsers = async (req, res) => {
   } catch (error) {
     console.error('Error in getUnreadBetweenUsers:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export const recieverDetailsId = async (req,res) => {
+  try {
+    const {id} = req.query ;
+    const [student,consultant] = await Promise.all([
+      studentDB.findStudentWithId(id),
+      ConsultancyDB.findConsultentById(id),
+    ]); 
+    const  result = consultant|| student
+    
+    if(!result){
+      return res.status(404).json({message:'Something went wrong User not Found'})
+    }
+    // console.log(result);
+    res.status(200).json({user:result})
+  } catch (error) {
+    console.error('Error in recieverDetailsId:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+export const getDashboardDetails = async (req, res) => {
+  try {
+    const {id}= req.query;
+    const [ applicationCount , acceptedStudents , courses ,coursesWithApplicationCount,pendingApplications] = await Promise.all([
+      applicationDB.getApplicationCountByCreatorId(id),
+      applicationDB.getAcceptedStudentsCountByCreatorId(id),
+      courseDB.findCoursesByCreator(id),
+      courseDB.getCoursesWithApplicationCountByCreatorId(id),
+      applicationDB.getAllPendingApplicationsByCreatorId(id),
+    ]);
+    // console.log(pendingApplications);
+    const courseCount = courses ? courses.length : 0
+    res.status(200).json({  applicationCount,acceptedStudents, courseCount,coursesWithApplicationCount,pendingApplications});
+  } catch (error) {
+    console.error('Error Getting Dashboard Details:', error);
+    res.status(500).json({ message: 'An error occurred while Getting Dashboard Details', error: error.message });
   }
 };

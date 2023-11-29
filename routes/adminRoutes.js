@@ -8,6 +8,7 @@ import {
          getConsultentData,
          getCountries,
          getCountryData,
+         getDashboardDetails,
          studentsDatas,
          updateCountryData
          } from "../controllers/adminController/adminController.js";
@@ -23,6 +24,6 @@ router.post('/update_countries',verify,uploadImage,updateCountryData);
 router.post('/disable_country',verify,disableCountryById);
 router.post('/consultant_access',verify,changeConsultencyAccess);   
 router.post('/students_access',verify,changeStudentAccess);
-
+router.get('/admin_dashboard',verify,getDashboardDetails)
 
 export default router;

@@ -1,6 +1,6 @@
 import CourseModel from '../models/courseModel.js'
 import Country from '../models/countriesSchema.js';
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 
 const { ObjectId } = Types;
 class CourseRepository {
@@ -14,7 +14,7 @@ class CourseRepository {
     }
   }
 
-  async  getCourseAllCourses(limit) {
+  async getCourseAllCourses(limit) {
     try {
       const pipeline = [
         {
@@ -28,8 +28,36 @@ class CourseRepository {
             created: -1,
           },
         },
+        {
+          $lookup: {
+            from: 'countries',
+            localField: 'country',
+            foreignField: '_id',
+            as: 'countryInfo',
+          },
+        },
+        {
+          $unwind: {
+            path: '$countryInfo',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: 'consultancies',
+            localField: 'creator_id',
+            foreignField: '_id',
+            as: 'creator',
+          },
+        },
+        {
+          $unwind: {
+            path: '$creator',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
       ];
-
+  
       if (limit) {
         pipeline.push({
           $limit: limit,
@@ -43,6 +71,8 @@ class CourseRepository {
       throw error;
     }
   }
+  
+  
   
   
 
@@ -77,26 +107,33 @@ class CourseRepository {
 
   async findCoursesByCreator(creatorId, limit = 6, sortCriteria = { createdAt: -1 }) {
     try {
-      let query = CourseModel.find({ creator_id: creatorId })
-      .populate({
-        path: 'country',
-        model: Country,
-      });
-  
-      if (limit > 0) {
-        query = query.limit(limit);
-      }
-  
-      if (sortCriteria) {
-        query = query.sort(sortCriteria);
-      }
-  
-      const courses = await query.exec();
-      return courses;
+        
+        const courses = await CourseModel
+            .find({
+                creator_id: creatorId,
+                is_active: true,
+                approved: true,
+            })
+            .sort(sortCriteria)
+            .limit(limit)
+            .populate({
+                path: 'creator_id',
+                model: 'Consultancy',
+            })
+            .populate({
+                path: 'country',
+                model: 'Country',
+            })
+            .exec();
+
+        return courses;
     } catch (error) {
-      throw error;
+        throw error;
     }
-  }
+}
+
+  
+  
   
 
   async getCoursesByPage(skip, limit ,filterCountries ,search, sortCriteria = { createdAt: -1 }) {
@@ -113,7 +150,6 @@ class CourseRepository {
   
       if (filterCountries.length > 0) {
         matchStage.country = { $in: filterCountries.map(id => new ObjectId(id)) }
-        // console.log('Match stage with country filter:', matchStage);
       }  
 
       const aggregationPipeline = [
@@ -196,6 +232,15 @@ class CourseRepository {
   async getCoursesByCountry(countryID) {
     try {
       const courses = await CourseModel.find({country:countryID})
+      .populate({
+        path: 'creator_id',
+        model: 'Consultancy',
+      })
+      .populate({
+          path: 'country',
+          model: 'Country',
+      })
+      .exec();
 
       return courses;
     } catch (error) {
@@ -247,6 +292,43 @@ class CourseRepository {
     }
   }  
 
+  async totalCourseCount(){
+    try {
+      return await CourseModel.countDocuments()
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+
+  async getCoursesWithApplicationCountByCreatorId(creatorId) {
+    try {
+      const coursesWithApplicationCount = await CourseModel.aggregate([
+        {
+          $match: {
+            creator_id: new mongoose.mongo.ObjectId(creatorId),
+          },
+        },
+        {
+          $lookup: {
+            from: 'applications',
+            localField: '_id',
+            foreignField: 'course',
+            as: 'applications',
+          },
+        },
+        {
+          $addFields: {
+            applicationCount: { $size: '$applications' },
+          },
+        },
+      ]);
+  
+      return coursesWithApplicationCount;
+    } catch (error) {
+      console.error('Error in getCoursesWithApplicationCountByCreatorId:', error);
+      throw error;
+    }
+  }
 }
 
 

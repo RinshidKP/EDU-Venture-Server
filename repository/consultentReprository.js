@@ -151,9 +151,30 @@ class ConsultancyRepository {
       throw error;
     }
   }
+  async findConsultentById(id){
+    try {
+      const consultant = await Consultancy.findById(id);
+      return consultant
+    } catch (error) {
+      console.error('Error in findConsultentById:', error);
+      throw error;
+    }
+  }
 
-
-
+  async totalConsultantsCount(){
+    try {
+      return await Consultancy.countDocuments()
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+  async findUnApprovedConsultants() {
+    try {
+      return await Consultancy.find({isActive:false}).limit(10).sort({createdAt:-1})
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
 
 
 }
