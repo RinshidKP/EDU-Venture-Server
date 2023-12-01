@@ -136,14 +136,13 @@ class CourseRepository {
   
   
 
-  async getCoursesByPage(skip, limit ,filterCountries ,search, sortCriteria = { createdAt: -1 }) {
+  async getCoursesByPage(skip, limit ,filterCountries ,search,sortCountryCriteria, sortCriteria) {
     try {
 
       const matchStage = {
         is_active: true,
         approved: true,
       };
-
       if (search && search.trim()) {
         matchStage.header = { $regex: new RegExp(search.trim(), 'i') };
       }      
@@ -188,13 +187,18 @@ class CourseRepository {
                 },
               },
               {
+                $sort: {
+                  'countryInfo.name': parseInt(sortCountryCriteria),
+                },
+              },
+              {
                 $skip: skip,
               },
               {
                 $limit: limit,
               },
               {
-                $sort: sortCriteria,
+                $sort: { 'createdAt': parseInt(sortCriteria) },
               },
             ],
             totalCourseCount: [

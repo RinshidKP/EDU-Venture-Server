@@ -6,6 +6,7 @@ export const generateToken = (user) => {
     role: user.role,
     name: user.username,
     email: user.email,
+    id:user._id
   };
   const options = {
     expiresIn: '8h',
@@ -26,6 +27,7 @@ export const verify = (req, res, next) => {
       const verified = jwt.verify(token , secretKey);
 
       if (verified.role !== userRole) {
+        // console.log('verfied',verified);
         res.status(403).json({ success: false, message: 'Forbidden' });
       } else {
         req.user = verified;

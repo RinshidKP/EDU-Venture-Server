@@ -10,7 +10,11 @@ import CountriesRepository from '../../repository/countriesRepository.js';
 import messageRepository from '../../repository/chatRepository.js';
 import BlogRepository from '../../repository/blogRepository.js';
 import imageCloudUpload from '../../helper/couldUpload.js';
+import Stripe from 'stripe';
+import TransactionRepository from '../../repository/transactionRepository.js';
+import CertificatesRepository from '../../repository/certificateRepositoy.js';
 
+const stripe =new Stripe('sk_test_51OHixDSJYia4uvqdunZaI9B9ChPoCtiWdqYSG2Pkizqs1hTAN3IZg5PGOw8BU6VEqTThVwlpvZF64Ug0J8acgLad00A2Qax7Mc');
 
 const StudentDB = new StudentRepository();
 const OneTimePassword = new OtpRepository();
@@ -19,6 +23,8 @@ const counsultentDB = new ConsultancyRepository();
 const applicationDB = new ApplicationRepository();
 const countryDB = new CountriesRepository();
 const blogDB = new BlogRepository();
+const transactionDB = new TransactionRepository();
+const certificateDB = new CertificatesRepository();
 
 export const createStudent = async (req, res, next) => {
   try {
@@ -113,7 +119,7 @@ export const validateOtp = async (req, res, next) => {
 
 export const resend_otp = async (req, res, next) => {
   try {
-    const { email } = req.query;
+    const { email } = req.body;
     const [user, deleted] = await Promise.all([
       StudentDB.getUserByEmail(email),
       OneTimePassword.deleteOtpByEmail(email)
@@ -182,10 +188,12 @@ export const handleSignin = async (req, res, next) => {
 export const loadProfile = async (req, res, next) => {
   try {
     const email = req.user.email;
+    const id = req.user.id;
     const user = await StudentDB.getUserByEmail(email);
+    const certificates = await certificateDB.getCertificateByStudentId(id)
 
     if (user) {
-      res.status(200).json({ user });
+      res.status(200).json({ user ,certificates });
     } else {
       res.status(404).json({ error: "User not found" });
     }
@@ -325,15 +333,17 @@ export const apply_new_course = async (req, res) => {
 
 export const view_all_courses = async (req, res) => {
   try {
-    const { page, limit ,filter ,search } = req.query;
+    const { page, limit ,filter ,search,sortCountry,sortDate } = req.query;
 
     const pageNumber = parseInt(page, 10);
     const itemsPerPage = parseInt(limit, 10);
-    // console.log('search...',search);
     const skipCount = (pageNumber - 1) * itemsPerPage;
     const filterArray = Array.isArray(filter) ? filter : filter ? [filter] : [];
-    
-    const getCoursesPromise = courseDB.getCoursesByPage(skipCount, itemsPerPage ,filterArray,search);
+
+    const getCoursesPromise = courseDB.getCoursesByPage(
+      skipCount, itemsPerPage ,
+      filterArray,search,
+      sortCountry,sortDate);
     const getAllCountriesPromise = countryDB.getAllCountries();
 
     const [coursesResult, countriesResult] = await Promise.all([getCoursesPromise, getAllCountriesPromise]);
@@ -601,3 +611,128 @@ export const recieverDetailsId = async (req,res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
+export const checkOutInitiation = async (req,res) => {
+  try {
+    const {application,id} = req.body;
+    const {course} = application
+    console.log(id);
+    const line_items = [{
+      price_data : {
+        currency : 'inr',
+        product_data : {
+          name : course.header,
+          description :course.short_blob
+        },
+        unit_amount:course.fee*100,
+      },
+      quantity:1
+    }]
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types:['card'],
+      line_items: line_items,
+      mode: 'payment',
+      success_url:`http://localhost:5173/course_details/success/${id}`,
+      cancel_url:  `http://localhost:5173/course_details/cancel/${id}`,
+    });
+
+    res.json({id:session.id});
+  } catch (error) {
+    
+  }
+}
+
+export const checkoutSuccess = async (req,res) => {
+  try {
+    const {id,sessionId,result} = req.body;
+    console.log('results here expect {}',result)
+    const application = await applicationDB.getApplicationById(id);    
+    // console.log('am here',application);
+    const transaction = {
+      transactionDate:Date.now(),
+      transactionId:sessionId,
+      payer:application.student._id,
+      reciever:application.course.creator_id,
+      course:application.course._id,
+      application:application._id
+    }
+    const newTransaction = await transactionDB.createTransaction(transaction);
+    console.log(newTransaction);
+    res.status(200)
+  } catch (error) {
+    
+  }
+}
+
+export const checkoutConfirm = async (req,res)=>{
+  try {
+    const {applicationId} = req.body
+    const transaction = await transactionDB.getTransactionByApplicationId(applicationId)
+    const application = await applicationDB.getApplicationById(applicationId)
+    res.status(200).json({transaction,application})
+  } catch (error) {
+     
+  }
+}
+
+export const savePassportChanges = async (req, res) => {
+  try {
+    const {studentId} = req.body;
+    let editedPassport = req.body.editedPassport || {};
+    // console.log(req.file);  
+    if (req.file) {
+      const image  = await imageCloudUpload(req.file)
+      editedPassport.image_proof = image;
+    }
+
+    const certificate = await certificateDB.getCertificateByStudentId(studentId);
+    
+    if(!certificate){
+      const certificate = await certificateDB.createCertificate(studentId,editedPassport);
+      return res.status(200).json({ message: 'Passport updated successfully',certificate });
+    }
+    
+    const updatedCertificate = await certificateDB.updatePassportWithStudentId(studentId,editedPassport);
+
+    if (certificate) {
+      res.status(200).json({ message: 'Passport updated successfully',certificate:updatedCertificate });
+    } else {
+      res.status(404).json({ error: 'Certificate not found' });
+    }
+  } catch (error) {
+    console.error('Error editing Passport :', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export const saveQualificationChanges = async (req, res) => {
+  try {
+    const {studentId} = req.body;
+    let editedQualification = req.body.editedQualification || {};
+    console.log(editedQualification);
+    if (req.file && req.file !== undefined) {
+      console.log(req.file);
+      const image_proof = await imageCloudUpload(req.file);
+      console.log(image_proof);
+      editedQualification.image_proof = image_proof;
+    }
+
+    const certificate = await certificateDB.getCertificateByStudentId(studentId);
+    
+    if(!certificate){
+      const certificate = await certificateDB.createCertificate(studentId,editedQualification);
+      return res.status(200).json({ message: 'Passport updated successfully',certificate });
+    }
+    const updatedQualificationData = editedQualification;
+    const updatedCertificate = await certificateDB.updateQualificationWithStudentId(studentId,updatedQualificationData);
+
+    if (certificate) {
+      res.status(200).json({ message: 'Qualification updated successfully',certificate:updatedCertificate });
+    } else {
+      res.status(404).json({ error: 'Certificate not found' });
+    }
+  } catch (error) {
+    console.error('Error editing Qualification :', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};

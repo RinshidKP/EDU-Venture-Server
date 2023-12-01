@@ -14,6 +14,8 @@ import {
     getUnreadBetweenUsers,
     recieverDetailsId,
     getDashboardDetails,
+    initiatePayment,
+    getStudentCertificates,
 } from '../controllers/consultencyController/consultencyController.js'
 import uploadImage from "../helper/multer.js";
 const router = express.Router()
@@ -22,11 +24,13 @@ const router = express.Router()
 router.post('/signup', createConsultancy);
 router.post('/otpvalidate', validateOtp);
 router.post('/login', handleSignin);
-router.get('/resend_otp', resend_otp);
+router.post('/resend_otp', resend_otp);
 //Students
 router.get('/students_consultent', verify, loadStudents);
+router.get('/student_certificates', verify, getStudentCertificates);
 router.post('/accept_candidate', verify, acceptStudent);
 router.post('/decline_candidate', verify, declineStudent);
+router.post('/intiatie_payement_option', verify, initiatePayment);
 
 //profile
 router.get('/profile', verify, loadProfile);
@@ -46,6 +50,8 @@ router.post('/mark_read', verify, markUnreadForChat);
 router.get('/chat_list', verify, getChatOfUser);
 router.get(`/unread_between_users`, verify, getUnreadBetweenUsers);
 router.get(`/reciever_details`,verify,recieverDetailsId);
+
+//dashboard
 router.get(`/consultant_dashboard`,verify,getDashboardDetails);
 
 

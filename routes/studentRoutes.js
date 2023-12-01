@@ -22,7 +22,12 @@ import {
     editBlogByUser,
     getAllBlogsToList,
     getUnreadBetweenUsers,
-    recieverDetailsId
+    recieverDetailsId,
+    checkOutInitiation,
+    checkoutSuccess,
+    checkoutConfirm,
+    savePassportChanges,
+    saveQualificationChanges
 } from '../controllers/studentController/studentController.js';
 import { verify } from "../middleware/auth.js";
 import uploadImage from "../helper/multer.js";
@@ -34,7 +39,7 @@ router.post('/signup',createStudent);
 router.post('/otpvalidate',validateOtp);
 router.post('/login',handleSignin);
 router.post('/new_password',verify,new_password);
-router.get('/resend_otp',resend_otp);
+router.post('/resend_otp',resend_otp);//post
 
 //Profile
 router.get('/profile',verify,loadProfile);
@@ -45,6 +50,8 @@ router.post('/create_blog',verify,uploadImage,newBlogByStudent);
 router.post('/edit_blog',verify,uploadImage,editBlogByUser);
 router.get('/user_blogs',verify,getUserBlogs);
 router.get('/blogs_data',verify,getAllBlogsToList);
+router.post('/passport_changes',verify,uploadImage,savePassportChanges);
+router.post('/qualification_changes',verify,uploadImage,saveQualificationChanges);
 
 //Home
 router.get('/list_courses',list_courses);
@@ -64,5 +71,10 @@ router.post('/mark_read',verify,markUnreadForChat);
 router.get(`/unread_between_users`,verify,getUnreadBetweenUsers);
 router.get(`/reciever_details`,verify,recieverDetailsId);
 
+
+//Payment
+router.post('/create_check_out',verify,checkOutInitiation)
+router.post('/checkout_success',verify,checkoutSuccess)
+router.post('/checkout_confirm',verify,checkoutConfirm)
 
 export default router;

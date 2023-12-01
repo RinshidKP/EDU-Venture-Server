@@ -18,7 +18,7 @@ const applicationSchema = new mongoose.Schema({
   },
   paymentStatus: { 
     type: String,
-    enum: ['Pending', 'Paid', 'Failed'],
+    enum: ['Pending','Initiated', 'Paid', 'Failed'],
     default: 'Pending',
   },
   applicationDate: {
@@ -28,6 +28,7 @@ const applicationSchema = new mongoose.Schema({
   additionalNotes: {
     type: String,
   },
+  
 });
 
 const ApplicationModel = mongoose.model('Application', applicationSchema);

@@ -9,6 +9,7 @@ import ApplicationRepository from '../../repository/applicationRepository.js';
 import CountriesRepository from '../../repository/countriesRepository.js';
 import messageRepository from '../../repository/chatRepository.js';
 import imageCloudUpload from '../../helper/couldUpload.js'
+import CertificatesRepository from '../../repository/certificateRepositoy.js';
 
 const ConsultancyDB = new ConsultancyRepository();
 const otpModel = new OtpRepository();
@@ -16,6 +17,7 @@ const courseDB = new CourseRepository();
 const studentDB = new StudentRepository();
 const applicationDB = new ApplicationRepository();
 const countryDB = new CountriesRepository();
+const certificateDB = new CertificatesRepository();
 
 export const createConsultancy = async (req, res , next) => {
   try {
@@ -109,7 +111,7 @@ export const validateOtp = async (req, res, next) => {
 
 export const resend_otp = async (req, res, next) => {
   try {
-    const { email } = req.query;
+    const { email } = req.body;
     const [user, deleted] = await Promise.all([
       ConsultancyDB.getConsultantByEmail(email),
       otpModel.deleteOtpByEmail(email)
@@ -166,8 +168,8 @@ export const handleSignin = async (req, res, next) => {
     }
     const passMatch = await compareSecret(userData.password, user.password);
     if (passMatch) {
-          const jwtToken = generateToken(user, 'consultent');
-          return res.status(200).json({ message: 'User signed in successfully',token:jwtToken ,user,role:'consultent' });
+          const jwtToken = generateToken(user);
+          return res.status(200).json({ message: 'User signed in successfully',token:jwtToken ,user,role:user.role });
     }else{
       console.error('Invalid password');
       return res.status(401).json({ message: 'Invalid password' });
@@ -381,6 +383,20 @@ export const declineStudent = async (req,res)=>{
   }
 }
 
+export const initiatePayment = async (req,res)=>{
+  try {
+    const { id } = req.body
+    const [success, studentData] = await Promise.all([
+      applicationDB.updateApplication(id, { paymentStatus: 'Initiated' }),
+      applicationDB.getApplicationById(id),
+    ]);
+    res.status(200).json({message:'Payment Initiated Successfully',studentData})
+  } catch (error) {
+    console.error('Error while Payment Initiation For Student:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
 export const getChatOfUser = async (req,res) => {
   try {
     const {id} = req.query;
@@ -502,3 +518,17 @@ export const getDashboardDetails = async (req, res) => {
     res.status(500).json({ message: 'An error occurred while Getting Dashboard Details', error: error.message });
   }
 };
+
+export const getStudentCertificates = async (req,res) =>{
+  try {
+    const {studentId } = req.query ;
+    const certificate = await  certificateDB.getCertificateByStudentId(studentId);
+    if(!certificate){
+      return res.json({certificate:false})
+    }
+    res.status(200).json({certificate})
+  } catch (error) {
+    console.error('Error Getting Certificate Details:', error);
+    res.status(500).json({ message: 'An error occurred while Getting Certificate Details', error: error.message });
+  }
+}
