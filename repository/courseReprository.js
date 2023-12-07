@@ -198,7 +198,7 @@ class CourseRepository {
                 $limit: limit,
               },
               {
-                $sort: { 'createdAt': parseInt(sortCriteria) },
+                $sort: { 'created': parseInt(sortCriteria) },
               },
             ],
             totalCourseCount: [
@@ -217,6 +217,7 @@ class CourseRepository {
       return { courses, totalCoursesCount };
       
     } catch (error) {
+      console.log('error while finding course data to list all datas ',error);
       throw error;
     }
   }

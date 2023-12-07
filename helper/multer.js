@@ -28,7 +28,7 @@ const processImage = async (filePath) => {
 // Middleware to handle file upload
 const uploadImage = (req, res, next) => {
   upload.single('image')(req, res, async (err) => {
-    // console.log(req.file);
+    console.log(req.file);
     if (!req.file) {
       return next();
     }

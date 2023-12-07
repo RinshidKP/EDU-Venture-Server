@@ -1,5 +1,4 @@
 import cloudinary from 'cloudinary';
-import { log } from 'console';
 import fs from 'fs/promises';
 
 cloudinary.config({

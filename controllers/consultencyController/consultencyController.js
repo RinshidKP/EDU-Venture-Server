@@ -332,13 +332,21 @@ export const new_password = async (req, res) => {
 export const loadStudents = async (req, res) => {
   try {
     const email = req.user.email; 
+    const { page , limit , search , date ,status ,payment} = req.query;
+    const pageNumber = parseInt(page, 10);
+    const itemsPerPage = parseInt(limit, 10);
+    const skipCount = (pageNumber - 1) * itemsPerPage;
+
     const consultant = await ConsultancyDB.getConsultantByEmail(email);
     if (!consultant) {
       return res.status(404).json({ message: 'Consultant not found' });
-    }
+    } 
 
-    const students = await applicationDB.findApplicationsByCourseCreator(consultant._id);
-    res.status(200).json({ students });
+    const { applications, totalApplicationsCount } =
+     await applicationDB.findApplicationsByCourseCreator(
+      consultant._id,skipCount,itemsPerPage,search,date,status,payment
+      );
+    res.status(200).json({ applications,totalApplicationsCount});
   } catch (error) {
     console.error('Error while loading students:', error);
     res.status(500).json({ error: 'Internal Server Error' });

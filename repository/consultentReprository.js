@@ -88,20 +88,30 @@ class ConsultancyRepository {
     }
   }
 
-  async getAllConsultantsByPage(skip, limit, sortCriteria = { createdAt: -1 }) {
+  async getAllConsultantsByPage(skip, limit,search, sortCriteria ) {
     try {
+
+      const matchCondition = {
+        isVerified: true,
+        isActive: true,
+      };
+  
+      if (search) {
+        matchCondition.$or = [
+          { consultancy_name: { $regex: search, $options: 'i' } },
+          { title: { $regex: search, $options: 'i' } },
+        ];
+      }
+      
       const aggregationPipeline = [
         {
-          $match: {
-            isVerified: true,
-            isActive: true,
-          },
+          $match: matchCondition,
         },
         {
           $facet: {
             consultants: [
               {
-                $sort: sortCriteria,
+                $sort: { consultancy_name: parseInt(sortCriteria) },
               },
               {
                 $skip: skip,
@@ -128,7 +138,7 @@ class ConsultancyRepository {
       console.error(error);
       throw new Error('Failed to find consultants and count');
     }
-  }
+  } 
 
   async updateConsultantAccessByID(id) {
     try {

@@ -86,9 +86,29 @@ class ApplicationRepository {
     }
   }
 
-  async findApplicationsByCourseCreator(creatorId) {
+  async findApplicationsByCourseCreator(creatorId,skip,limit,search,sortDateCriteria,status,paymentStatus) {
     try {
-      const applications = await ApplicationModel.aggregate([
+
+      const matchCondition = {
+        'course.creator_id': creatorId,
+      };
+      if(status){
+        matchCondition.status = status
+      }
+      if(paymentStatus){
+        matchCondition.paymentStatus=paymentStatus
+      }
+      if (search) {
+        matchCondition['$or'] = [
+          { 'course.header': { $regex: search, $options: 'i' } },
+          { 'student.full_name': { $regex: search, $options: 'i' } },
+        ];
+      }
+
+      const sortCriteria = {
+        'applicationDate': parseInt(sortDateCriteria),
+      }
+      const applicationsPipeline = [
         {
           $lookup: {
             from: 'courses',
@@ -101,23 +121,58 @@ class ApplicationRepository {
           $unwind: '$course',
         },
         {
-          $match: {
-            'course.creator_id': creatorId,
-          },
-        },
-        {
-        $lookup: {
+          $lookup: {
             from: 'students',
             localField: 'student',
             foreignField: '_id',
             as: 'student',
+          },
         },
+        {
+          $match: matchCondition
         },
         {
         $unwind: '$student',
         },
+        {
+          $sort: sortCriteria
+      },
+        {
+          $skip: skip,
+        },
+        {
+          $limit: limit,
+        },
+      ];
+
+      const countPipeline = [
+        {
+          $lookup: {
+            from: 'courses',
+            localField: 'course',
+            foreignField: '_id',
+            as: 'course',
+          },
+        },
+        {
+          $unwind: '$course',
+        },
+        {
+          $match: matchCondition
+        },
+        {
+          $count: 'count',
+        },
+      ];
+      
+      const [applications, countResult] = await Promise.all([
+        ApplicationModel.aggregate(applicationsPipeline),
+        ApplicationModel.aggregate(countPipeline),
       ]);
-      return applications;
+  
+      const totalApplicationsCount = countResult.length > 0 ? countResult[0].count : 0;
+  
+      return { applications, totalApplicationsCount };
     } catch (error) {
       throw error;
     }

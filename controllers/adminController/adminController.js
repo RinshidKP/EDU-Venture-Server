@@ -54,8 +54,12 @@ export const createCountry = async (req, res) => {
   
   export const getCountries = async (req,res) => {
     try {
-      const countries = await countryDB.getAllCountries()
-      res.status(200).json({countries})
+      const {page,limit,search,spell,filter} = req.query;
+      const pageNumber = parseInt(page, 10);
+      const itemsPerPage = parseInt(limit, 10);
+      const skipCount = (pageNumber - 1) * itemsPerPage;
+      const {countries,totalCount} = await countryDB.getAllCountries(skipCount, itemsPerPage ,search,spell,filter )
+      res.status(200).json({countries,totalCount})
     } catch (error) {
       
     }

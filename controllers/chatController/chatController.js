@@ -1,7 +1,7 @@
 import messageRepository from "../../repository/chatRepository.js";
 
-export const createMessage = async (sender, receiver, text) => {
-    return messageRepository.createMessage(sender, receiver, text);
+export const createMessage = async (sender, receiver, text ,type) => {
+    return messageRepository.createMessage(sender, receiver, text,type);
   };
   
  export  const getMessagesForUser = async (userId) => {

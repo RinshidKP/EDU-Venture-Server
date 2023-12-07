@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import connectDB from './config/database.js'
+// import range from 'express-range';
 import cors from 'cors';
 import cookieParser from "cookie-parser";
 import http from 'http';
@@ -29,6 +30,7 @@ app.use(cors());
 app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({extended:true},{limit: '50mb'}));
 app.use(express.static("public"));
+// app.use(range({ accept: 'bytes' , limit: 100000000,}));
 
 connectDB();
 
@@ -36,6 +38,7 @@ app.use('/', studentRoutes);
 app.use('/consultent', consultentRoutes);
 app.use('/admin', adminRoutes);
 app.use('/chat', chatRoutes);
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something went wrong!');

@@ -2,12 +2,13 @@ import Message from "../models/messageModal.js";
 
 
 const messageRepository = {
-    createMessage: async (sender, receiver, text) => {
+    createMessage: async (sender, receiver, text ,type) => {
       try {
         const newMessage = new Message({
           sender,
           receiver,
           text,
+          type,
         });
         const savedMessage = await newMessage.save();
         return savedMessage;

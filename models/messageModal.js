@@ -24,6 +24,9 @@ const messageSchema = new mongoose.Schema({
     index:true,
     default: Date.now,
   },
+  type : {
+    type :Number
+  },
 });
 
 messageSchema.index({ sender: 1, receiver: 1 });

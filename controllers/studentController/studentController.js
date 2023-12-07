@@ -344,7 +344,7 @@ export const view_all_courses = async (req, res) => {
       skipCount, itemsPerPage ,
       filterArray,search,
       sortCountry,sortDate);
-    const getAllCountriesPromise = countryDB.getAllCountries();
+    const getAllCountriesPromise = countryDB.getCountries();
 
     const [coursesResult, countriesResult] = await Promise.all([getCoursesPromise, getAllCountriesPromise]);
 
@@ -361,7 +361,7 @@ export const view_all_courses = async (req, res) => {
 
 export const view_all_consultencies = async (req, res) => {
   try {
-    const { page, limit } = req.query;
+    const { page, limit ,search,spell} = req.query;
     const pageNumber = parseInt(page, 10);
     const itemsPerPage = parseInt(limit, 10);
 
@@ -369,7 +369,7 @@ export const view_all_consultencies = async (req, res) => {
     if (skipCount < 0) {
       throw new Error('Invalid page or limit parameters');
     }
-    const { consultants, totalConsultantsCount } = await counsultentDB.getAllConsultantsByPage(skipCount, itemsPerPage);
+    const { consultants, totalConsultantsCount } = await counsultentDB.getAllConsultantsByPage(skipCount, itemsPerPage,search,spell);
     res.status(200).json({ consultants, totalConsultantsCount });
   } catch (error) {
     console.error('Error while viewing Consultencies:', error);
@@ -392,11 +392,11 @@ export const home_countries = async (req, res) => {
 
 export const listAllCountries = async (req, res) => {
   try {
-    const { page, limit } = req.query;
+    const { page, limit ,search ,spell} = req.query;
     const pageNumber = parseInt(page, 10);
     const itemsPerPage = parseInt(limit, 10);
     const skipCount = (pageNumber - 1) * itemsPerPage;
-    const { countries, totalCount } = await countryDB.getAllCountriesByPage(skipCount, itemsPerPage)
+    const { countries, totalCount } = await countryDB.getAllCountriesByPage(skipCount, itemsPerPage ,search,spell)
     res.status(200).json({ countries, totalCount });
   } catch (error) {
     console.error('Error listing All Countries:', error);
@@ -570,7 +570,8 @@ export const getAllBlogsToList = async (req,res) => {
     const { blogs,totalBlogsCount } = await blogDB.getAllBlogs(search,skipCount, itemsPerPage);
     res.status(200).json({blogs,totalBlogsCount})
   } catch (error) {
-    
+    console.error('Error at getAllBlogs for listing :', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 }
 
@@ -638,16 +639,15 @@ export const checkOutInitiation = async (req,res) => {
 
     res.json({id:session.id});
   } catch (error) {
-    
+    console.error('Error checkout Initialisation :', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 }
 
 export const checkoutSuccess = async (req,res) => {
   try {
     const {id,sessionId,result} = req.body;
-    console.log('results here expect {}',result)
     const application = await applicationDB.getApplicationById(id);    
-    // console.log('am here',application);
     const transaction = {
       transactionDate:Date.now(),
       transactionId:sessionId,
@@ -657,10 +657,10 @@ export const checkoutSuccess = async (req,res) => {
       application:application._id
     }
     const newTransaction = await transactionDB.createTransaction(transaction);
-    console.log(newTransaction);
     res.status(200)
   } catch (error) {
-    
+    console.error('Error checkout success :', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 }
 
@@ -671,7 +671,8 @@ export const checkoutConfirm = async (req,res)=>{
     const application = await applicationDB.getApplicationById(applicationId)
     res.status(200).json({transaction,application})
   } catch (error) {
-     
+    console.error('Error checkout Confirm :', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 }
 
@@ -679,7 +680,6 @@ export const savePassportChanges = async (req, res) => {
   try {
     const {studentId} = req.body;
     let editedPassport = req.body.editedPassport || {};
-    // console.log(req.file);  
     if (req.file) {
       const image  = await imageCloudUpload(req.file)
       editedPassport.image_proof = image;
