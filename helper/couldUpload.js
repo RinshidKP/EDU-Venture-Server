@@ -18,11 +18,7 @@ cloudinary.config({
         folder: "EduVenture",
       });
       // console.log(result);
-      fs.unlink(file.path,function(err){
-        if(err){
-          console.log("something went wrong :"+ err);
-        }
-      })
+      fs.unlink(file.path)
       return { public_id: result.public_id, url: result.url,
       } ;
     } catch (error) {

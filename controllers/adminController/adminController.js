@@ -34,9 +34,12 @@ export const studentsDatas = async (req, res) => {
 export const createCountry = async (req, res) => {
     try {
       const countryData = req.body;
-      // countryData.image = req.file.filename;
+      console.log('am here at create');
+      if(!req.file){
+        return res.status(400).json({message:'Country Image Required'});
+      }
       countryData.image = await imageCloudUpload(req.file)
-      // console.log('adding...');
+      console.log('adding...');
       const existingCountry = await countryDB.findCountryByName(countryData.name);
   
       if (existingCountry) {

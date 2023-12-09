@@ -21,7 +21,7 @@ const processImage = async (filePath) => {
   const imageBuffer = await fs.readFile(filePath);
 
   // Process the image using sharp (e.g., convert to JPEG)
-  const processedBuffer = await sharp(imageBuffer).jpeg().toBuffer();
+  const processedBuffer = await sharp(imageBuffer).jpeg({ quality: 80 }).toBuffer();
   return processedBuffer;
 };
 

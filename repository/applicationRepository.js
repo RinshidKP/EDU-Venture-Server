@@ -24,7 +24,19 @@ class ApplicationRepository {
   async getApplicationById(applicationId) {
     try {
       const application = await ApplicationModel.findById(applicationId)
-      .populate('course')
+      .populate([
+        {
+          path: 'course',
+          populate: [
+            {
+              path: 'creator_id',
+            },
+            {
+              path: 'country',
+            },
+          ],
+        },
+      ])
       .populate({
         path: 'student',
         model:StudentModel,

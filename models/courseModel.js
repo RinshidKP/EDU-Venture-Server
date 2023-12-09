@@ -48,10 +48,12 @@ const courseSchema = new mongoose.Schema({
   country: {
     type: mongoose.Schema.Types.ObjectId, 
     required: true,
+    ref:'Country',
   },
   creator_id: {
     type: mongoose.Schema.Types.ObjectId, 
     required: true,
+    ref:'Consultancy',
   },
   students: {
     type: [mongoose.Schema.Types.ObjectId],

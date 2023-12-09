@@ -1,6 +1,7 @@
 import { compareSecret, secretHash } from '../../helper/secretHash.js'
 import StudentRepository from '../../repository/studentRepository.js';
 import OtpRepository from '../../repository/otpReprository.js';
+import nodemailer from 'nodemailer';
 import CourseRepository from '../../repository/courseReprository.js';
 import ConsultancyRepository from '../../repository/consultentReprository.js';
 import sendMail from '../../helper/sendMail.js';
@@ -670,16 +671,77 @@ export const checkOutInitiation = async (req,res) => {
 export const checkoutSuccess = async (req,res) => {
   try {
     const {id,sessionId,result} = req.body;
-    const application = await applicationDB.getApplicationById(id);    
+    const application = await applicationDB.getApplicationById(id); 
+    const updated = await applicationDB.updateApplication(id,{paymentStatus:'Paid',status:'Success'})   
     const transaction = {
       transactionDate:Date.now(),
       transactionId:sessionId,
       payer:application.student._id,
       reciever:application.course.creator_id,
       course:application.course._id,
-      application:application._id
+      application:application._id,
+      isSuccess:true
     }
     const newTransaction = await transactionDB.createTransaction(transaction);
+
+    const toEmail = application.student.email
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.EMAILPASSWORD,
+      },
+    });
+
+    const formatDate = (date) => {
+      const options = { day: 'numeric', month: 'numeric', year: '2-digit', timeZone: 'Asia/Kolkata' };
+      return new Date(date).toLocaleDateString('en-IN', options);
+    };
+
+    const mailOptions = {
+      from: process.env.EMAIL,
+      to: toEmail,
+      subject: `Purchase Bill for ${application.course.header}`,
+      html: `
+      <div style={{ background: '#E5E5E5', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ maxWidth: '800px', background: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', margin: '20px' }}>
+        <div style={{ borderLeft: '4px solid #D1D5DB', borderRight: '4px solid #D1D5DB', padding: '16px' }}>
+          <div style={{ marginLeft: '16px' }}>
+            <p>
+              Hi ${application?.student?.full_name},
+            </p>
+          </div>
+          <div style={{ marginLeft: '16px', marginRight: '16px', marginTop: '16px' }}>
+            <p style={{ fontWeight: 'bold' }}>Transaction reference: ${transaction.transactionId}</p>
+            <p>Order date: ${formatDate(transaction.transactionDate)}</p>
+            <p style={{ fontWeight: 'bold' }}>Payment Details:</p>
+            <p>
+              Course: ${application?.course?.header} <br />
+            </p>
+            <p>
+              Consultant Name: ${application?.course?.creator_id?.consultancy_name} <br />
+            </p>
+            <p>
+              Country Name: ${application?.course?.country?.name} <br />
+            </p>
+            <p>
+              Amount:  &#8377; ${application?.course?.fee} <br />
+            </p>
+            <p>We advise keeping this email for future reference.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      `,
+    };
+    
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(info);
+
     res.status(200)
   } catch (error) {
     console.error('Error checkout success :', error);
@@ -689,9 +751,11 @@ export const checkoutSuccess = async (req,res) => {
 
 export const checkoutConfirm = async (req,res)=>{
   try {
-    const {applicationId} = req.body
-    const transaction = await transactionDB.getTransactionByApplicationId(applicationId)
-    const application = await applicationDB.getApplicationById(applicationId)
+    const {applicationId} = req.query;
+    const [transaction, application] = await Promise.all([
+      transactionDB.getTransactionByApplicationId(applicationId),
+      applicationDB.getApplicationById(applicationId),
+    ]);
     res.status(200).json({transaction,application})
   } catch (error) {
     console.error('Error checkout Confirm :', error);

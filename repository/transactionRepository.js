@@ -36,6 +36,7 @@ async getTransactionByApplicationId(applicationId) {
       const transactions = await Transaction.find({ payer : studentId })
       .populate('application')
       .populate('course')
+      .populate('payer')
       .exec();
       return transactions;
     } catch (error) {

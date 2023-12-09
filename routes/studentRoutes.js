@@ -91,6 +91,6 @@ router.post('/mark_read',verify,markUnreadForChat);
 //Payment
 router.post('/create_check_out',verify,checkOutInitiation)
 router.post('/checkout_success',verify,checkoutSuccess)
-router.post('/checkout_confirm',verify,checkoutConfirm)
+router.get('/checkout_confirm',verify,checkoutConfirm)
 
 export default router;

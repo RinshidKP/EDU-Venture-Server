@@ -11,11 +11,11 @@ const transactionSchema = new mongoose.Schema({
   },
   payer: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Student',
+    ref: 'student',
   },
   receiver: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Consultant',
+    ref: 'Consultancy',
   },
   course: {
     type: mongoose.Schema.Types.ObjectId,
