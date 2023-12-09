@@ -38,7 +38,6 @@ class ApplicationRepository {
   // Update an application by ID
   async updateApplication(applicationId, updateFields) {
     try {
-      console.log(applicationId,updateFields);
       const updatedApplication = await ApplicationModel.findByIdAndUpdate(
         applicationId,
         { $set: updateFields },

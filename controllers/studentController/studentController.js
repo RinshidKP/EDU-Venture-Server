@@ -13,6 +13,7 @@ import imageCloudUpload from '../../helper/couldUpload.js';
 import Stripe from 'stripe';
 import TransactionRepository from '../../repository/transactionRepository.js';
 import CertificatesRepository from '../../repository/certificateRepositoy.js';
+import ReviewRepository from '../../repository/reviewRepository.js';
 
 const stripe =new Stripe('sk_test_51OHixDSJYia4uvqdunZaI9B9ChPoCtiWdqYSG2Pkizqs1hTAN3IZg5PGOw8BU6VEqTThVwlpvZF64Ug0J8acgLad00A2Qax7Mc');
 
@@ -25,6 +26,7 @@ const countryDB = new CountriesRepository();
 const blogDB = new BlogRepository();
 const transactionDB = new TransactionRepository();
 const certificateDB = new CertificatesRepository();
+const reviewDB = new ReviewRepository();
 
 export const createStudent = async (req, res, next) => {
   try {
@@ -331,6 +333,20 @@ export const apply_new_course = async (req, res) => {
   }
 }
 
+export const reapply_course = async (req,res)=> {
+  try {
+    const { id } = req.body
+    const reapply  = await applicationDB.updateApplication(id,{status:'Reapplied'});
+    if(!reapply){
+      return res.status(400).json({message:'something went wrong'})
+    }
+    res.status(200).json({message:'Reapplied Successfully',reapply})
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
 export const view_all_courses = async (req, res) => {
   try {
     const { page, limit ,filter ,search,sortCountry,sortDate } = req.query;
@@ -435,8 +451,15 @@ export const studentProfileCourseStatus = async (req, res) => {
 
   try {
     const { courseID, studentID } = req.query;
-    const applied = await applicationDB.findIfStudentApplied(studentID, courseID);
-    res.status(200).json({ applied });
+    const [applied, certificate, reviews] = await Promise.all([
+        applicationDB.findIfStudentApplied(studentID, courseID),
+        certificateDB.getCertificateByStudentId(studentID),
+        reviewDB.findCourseReviews(courseID)
+    ]);
+    if(!certificate){
+      return res.status(200).json({ applied , certificate:false ,reviews});
+    }
+    res.status(200).json({ applied , certificate , reviews});
   } catch (error) {
     console.error('Error listing Applications of specific Student:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -734,5 +757,62 @@ export const saveQualificationChanges = async (req, res) => {
   } catch (error) {
     console.error('Error editing Qualification :', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export const createReview = async (req,res)=>{
+  try {
+    const reviewData = req.body;
+    const newReview = await reviewDB.createReview(reviewData);
+    if(!newReview){
+      return res.status(500).json({message:'Something Happened While Saving'})
+    }
+    res.status(200).json({review:newReview,message:'Your review has been submitted successfully.'})
+  } catch (error) {
+    console.error('Error while Creating Review :', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+export const updateReview = async (req,res)=>{
+  try {
+    const {newReview,reviewId} = req.body;
+    const updatedReview = await reviewDB.updateReview(reviewId,newReview);
+    if(!updatedReview){
+      return res.status(500).json({message:'Something Happened While Updating'})
+    }
+    res.status(200).json({review:updatedReview,message:'Your review has been updated successfully.'})
+  } catch (error) {
+    console.error('Error while Creating Review :', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+export const deleteReview = async (req, res) => {
+  try {
+    const { reviewId } = req.query;
+    const review = await reviewDB.deleteReview(reviewId); 
+
+    if (!review) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+
+    res.status(200).json({ message: 'Review deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+
+};
+
+export const getStudentTransactions = async (req, res) => {
+  
+  try {
+    const { studentId } = req.query;
+    const transactions = await transactionDB.getTransactionByStudentId(studentId);
+    res.status(200).json({transactions});
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 };

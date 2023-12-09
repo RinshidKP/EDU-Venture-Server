@@ -1,7 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import connectDB from './config/database.js'
-// import range from 'express-range';
 import cors from 'cors';
 import cookieParser from "cookie-parser";
 import http from 'http';
@@ -30,7 +29,6 @@ app.use(cors());
 app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({extended:true},{limit: '50mb'}));
 app.use(express.static("public"));
-// app.use(range({ accept: 'bytes' , limit: 100000000,}));
 
 connectDB();
 
@@ -51,16 +49,13 @@ function getUserIdFromSocket(socket) {
 }
 
 io.on('connection', (socket) => {
-  // console.log('A user connected');
   const userId = getUserIdFromSocket(socket)
   if(userId){
     userSockets[userId]=socket;
-    // console.log('user',userId); 
   }
   socket.on('disconnect', () => {
-
     delete userSockets[userId];
-  });
+});
   
   
 });

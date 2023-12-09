@@ -27,7 +27,12 @@ import {
     checkoutSuccess,
     checkoutConfirm,
     savePassportChanges,
-    saveQualificationChanges
+    saveQualificationChanges,
+    reapply_course,
+    createReview,
+    updateReview,
+    deleteReview,
+    getStudentTransactions
 } from '../controllers/studentController/studentController.js';
 import { verify } from "../middleware/auth.js";
 import uploadImage from "../helper/multer.js";
@@ -46,6 +51,7 @@ router.get('/profile',verify,loadProfile);
 router.get('/student_course',verify,getApplications);
 router.get('/student_application',verify,studentProfileCourseStatus);
 router.get('/user_blogs',verify,getUserBlogs);
+router.get('/transactions',verify, getStudentTransactions);
 
 router.post('/create_blog',verify,uploadImage,newBlogByStudent);
 router.post('/edit_blog',verify,uploadImage,editBlogByUser);
@@ -66,6 +72,13 @@ router.get('/blogs_data',getAllBlogsToList);
 //Course 
 router.get('/view_courses',view_all_courses);
 router.post('/apply_course',verify,apply_new_course);
+router.post('/reapply_course',verify,reapply_course);
+
+
+//Review
+router.post('/create_a_review',verify,createReview);
+router.post('/update_review',verify,updateReview);
+router.delete('/delete_review',verify,deleteReview);
 
 //Chat
 router.get('/chat_list',verify,getChatOfUser);
