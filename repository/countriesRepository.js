@@ -68,6 +68,11 @@ class CountriesRepository {
         isActive: true,
       };
 
+      let sortOrder = parseInt(sortCriteria);
+      if (isNaN(sortOrder) || (sortOrder !== 1 && sortOrder !== -1)) {
+         sortOrder = 1
+      }
+
       if (search) {
         matchCondition.$or = [
           { name: { $regex: search, $options: 'i' } },
@@ -79,7 +84,7 @@ class CountriesRepository {
           $match: matchCondition,
         },
         {
-          $sort: { name: parseInt(sortCriteria) },
+          $sort: { name: sortOrder },
         },
         {
           $skip: skipCount,
