@@ -23,12 +23,12 @@ cors: {
 
 export const userSockets = {}
 
-const corsOptions = {
+const corsOptions ={
   origin: 'https://eduventure-445wgs6if-rinshids-projects.vercel.app',
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: true,
-  optionsSuccessStatus: 204, 
+  credentials: true, // enable credentials (cookies, authorization headers, etc.)
 };
+;
 
 app.use(cookieParser());
 dotenv.config();
