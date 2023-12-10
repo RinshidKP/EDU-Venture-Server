@@ -16,16 +16,23 @@ const server = http.createServer(app);
 const io = new Server(server,{ 
   transports: ['websocket'], 
 cors: {
-  origin: '*', // Replace with your client's origin
+  origin: '*',
   methods: ['GET', 'POST'],
-  },
+  },
 })
 
 export const userSockets = {}
 
+const corsOptions = {
+  origin: 'https://eduventure-445wgs6if-rinshids-projects.vercel.app',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  optionsSuccessStatus: 204, 
+};
+
 app.use(cookieParser());
 dotenv.config();
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({extended:true},{limit: '50mb'}));
 app.use(express.static("public"));
@@ -44,7 +51,6 @@ app.use((err, req, res, next) => {
 
 function getUserIdFromSocket(socket) {
   const userId = socket.handshake.query.userId;
-
   return userId ;
 }
 
@@ -54,10 +60,8 @@ io.on('connection', (socket) => {
     userSockets[userId]=socket;
   }
   socket.on('disconnect', () => {
-    delete userSockets[userId];
-});
-  
-  
+      delete userSockets[userId];
+  });  
 });
 
 app.use((err, req, res, next) => {
