@@ -20,7 +20,6 @@ const corsOptions = {
     'http://edu-venture-client.vercel.app',
     'https://edu-venture-client.vercel.app',
   ],
-  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
   credentials: true,
 };
 
