@@ -12,6 +12,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 
 const app = express();
+const server = http.createServer(app);
 
 const corsOptions = {
   origin: [
@@ -19,13 +20,11 @@ const corsOptions = {
     'http://edu-venture-client.vercel.app',
     'https://edu-venture-client.vercel.app',
   ],
-  methods: '*',
-  origin: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 };
 
 app.use(cors(corsOptions));
-const server = http.createServer(app);
 
 
 
