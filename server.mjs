@@ -12,7 +12,6 @@ import adminRoutes from './routes/adminRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 
 const app = express();
-const server = http.createServer(app);
 
 const corsOptions = {
   origin: [
@@ -21,8 +20,14 @@ const corsOptions = {
     'https://edu-venture-client.vercel.app',
   ],
   methods: '*',
+  origin: true,
   credentials: true,
 };
+
+app.use(cors(corsOptions));
+const server = http.createServer(app);
+
+
 
 const io = new Server(server,{ 
   transports: ['websocket'], 
@@ -33,7 +38,7 @@ export const userSockets = {}
 
 app.use(cookieParser());
 dotenv.config();
-app.use(cors(corsOptions));
+
 app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({extended:true},{limit: '50mb'}));
 app.use(express.static("public"));
