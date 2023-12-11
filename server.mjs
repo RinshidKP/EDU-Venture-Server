@@ -16,8 +16,8 @@ const server = http.createServer(app);
 
 const corsOptions = {
   origin: [
-    'http://eduventure-445wgs6if-rinshids-projects.vercel.app',
-    'https://eduventure-445wgs6if-rinshids-projects.vercel.app',
+    'http://eduventure-eight.vercel.app',
+    'https://eduventure-eight.vercel.app',
   ],
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
   credentials: true,
