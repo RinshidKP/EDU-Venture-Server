@@ -22,12 +22,12 @@ cors: {
 })
 
 export const userSockets = {}
-
+// [
+//   'http://eduventure-445wgs6if-rinshids-projects.vercel.app',
+//   'https://eduventure-445wgs6if-rinshids-projects.vercel.app',
+// ]
 const corsOptions = {
-  origin: [
-    'http://eduventure-445wgs6if-rinshids-projects.vercel.app',
-    'https://eduventure-445wgs6if-rinshids-projects.vercel.app',
-  ],
+  origin: '*',
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
   credentials: true,
 };
