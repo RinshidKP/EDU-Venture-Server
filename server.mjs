@@ -13,25 +13,22 @@ import chatRoutes from './routes/chatRoutes.js';
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server,{ 
-  transports: ['websocket'], 
-cors: {
-  origin: '*',
-  methods: ['GET', 'POST'],
-  },
-})
 
-export const userSockets = {}
-// [
-//   'http://eduventure-445wgs6if-rinshids-projects.vercel.app',
-//   'https://eduventure-445wgs6if-rinshids-projects.vercel.app',
-// ]
 const corsOptions = {
-  origin: '*',
+  origin: [
+    'http://eduventure-445wgs6if-rinshids-projects.vercel.app',
+    'https://eduventure-445wgs6if-rinshids-projects.vercel.app',
+  ],
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
   credentials: true,
 };
 
+const io = new Server(server,{ 
+  transports: ['websocket'], 
+cors: corsOptions
+})
+
+export const userSockets = {}
 
 app.use(cookieParser());
 dotenv.config();
