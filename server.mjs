@@ -16,6 +16,7 @@ const server = http.createServer(app);
 
 const corsOptions = {
   origin: [
+    'eduventure-eight.vercel.app',
     'http://eduventure-eight.vercel.app',
     'https://eduventure-eight.vercel.app',
   ],
