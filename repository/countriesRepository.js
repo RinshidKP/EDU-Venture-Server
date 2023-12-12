@@ -42,7 +42,7 @@ class CountriesRepository {
   
         query = query.sort({ name: parseInt(spell) });
 
-        const countries = await query.skip(skip).limit(limit);
+        const countries = await query.skip(parseInt(skip)).limit(parseInt(limit));
   
         const totalCount = await Country.countDocuments();
   
