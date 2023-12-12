@@ -355,7 +355,7 @@ export const loadStudents = async (req, res) => {
 
 export const list_create_countries = async (req, res) => {
   try {
-    const countries = await countryDB.getAllCountries();
+    const countries = await countryDB.getCountries();
     res.status(200).json({ countries });
   } catch (error) {
     console.error('Error while loading countries:', error);
