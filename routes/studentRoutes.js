@@ -42,7 +42,7 @@ const router = express.Router()
 router.post('/forgot_password',forgot_password);
 router.post('/signup',createStudent);
 router.post('/otpvalidate',validateOtp);
-router.post('/login',handleSignin);
+router.post('login',handleSignin);
 router.post('/new_password',verify,new_password);
 router.post('/resend_otp',resend_otp);
 

@@ -26,11 +26,13 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-
-
 const io = new Server(server,{ 
   transports: ['websocket'], 
-cors: corsOptions
+cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
+  }
 })
 
 export const userSockets = {}
