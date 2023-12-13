@@ -60,6 +60,7 @@ function getUserIdFromSocket(socket) {
 
 io.on('connection', (socket) => {
   const userId = getUserIdFromSocket(socket)
+  console.log('user connected',userId)
   if(userId){
     userSockets[userId]=socket;
   }
