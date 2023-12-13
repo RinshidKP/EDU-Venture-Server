@@ -16,7 +16,7 @@ const server = http.createServer(app);
 
 const corsOptions = {
   origin: [
-    'http://localhost:5173/',
+    'http://localhost:5173',
     'edu-venture-client.vercel.app',
     'http://edu-venture-client.vercel.app',
     'https://edu-venture-client.vercel.app',
@@ -29,11 +29,7 @@ app.use(cors(corsOptions));
 
 const io = new Server(server,{ 
   transports: ['websocket'], 
-cors: {
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true,
-  }
+  cors: corsOptions
 })
 
 export const userSockets = {}
