@@ -190,7 +190,7 @@ class StudentRepository {
     
     async totalStudentsCount(){
       try {
-        return await StudentModel.countDocuments({isAdmin:false})
+        return await StudentModel.countDocuments({ role: 'student' })
       } catch (error) {
         console.error('Error:', error);
       }
