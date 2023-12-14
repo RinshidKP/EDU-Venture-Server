@@ -44,7 +44,7 @@ async getTransactionByApplicationId(applicationId) {
     }
   }
 
-  async getTotalFeesByConsultancy(consultancyId) {
+  async getTotalFeeForCourseCreator(creatorId) {
     try {
       const result = await Transaction.aggregate([
         {
@@ -54,19 +54,8 @@ async getTransactionByApplicationId(applicationId) {
         },
         {
           $lookup: {
-            from: 'applications',
-            localField: 'application',
-            foreignField: '_id',
-            as: 'application',
-          },
-        },
-        {
-          $unwind: '$application',
-        },
-        {
-          $lookup: {
             from: 'courses',
-            localField: 'application.course',
+            localField: 'course',
             foreignField: '_id',
             as: 'course',
           },
@@ -76,7 +65,7 @@ async getTransactionByApplicationId(applicationId) {
         },
         {
           $match: {
-            'course.creator_id': consultancyId,
+            'course.creator_id': creatorId,
           },
         },
         {
@@ -85,11 +74,14 @@ async getTransactionByApplicationId(applicationId) {
             totalFee: { $sum: '$course.fee' },
           },
         },
-      ]).exec();
-  
-      return result.length > 0 ? result[0].totalFee : 0;
+      ]);
+
+      if (result.length > 0) {
+        return result[0].totalFee;
+      } else {
+        return 0;
+      }
     } catch (error) {
-      console.error('Error while calculating total fees:', error);
       throw error;
     }
   }
