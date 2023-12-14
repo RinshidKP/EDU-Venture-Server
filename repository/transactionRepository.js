@@ -66,7 +66,7 @@ async getTransactionByApplicationId(applicationId) {
         },
         {
           $match: {
-            'course.creator_id': mongoose.Types.ObjectId(creatorId),
+            'course.creator_id':  new mongoose.mongo.ObjectId(creatorId),
           },
         },
         {
