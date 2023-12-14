@@ -182,7 +182,7 @@ class CourseRepository {
               },
               {
                 $unwind: {
-                  path: '$countryInfo',
+                  path: 'countryInfo',
                   preserveNullAndEmptyArrays: true,
                 },
               },
