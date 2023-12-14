@@ -188,7 +188,7 @@ class CourseRepository {
               },
               {
                 $sort: {
-                  'countryInfo.name': parseInt(sortCountryCriteria),
+                  '$countryInfo.name': parseInt(sortCountryCriteria),
                 },
               },
               {
