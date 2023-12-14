@@ -189,6 +189,7 @@ class CourseRepository {
               {
                 $sort: {
                   'countryInfo.name': parseInt(sortCountryCriteria),
+                  'created': parseInt(sortCriteria)
                 },
               },
               {
@@ -196,9 +197,6 @@ class CourseRepository {
               },
               {
                 $limit: limit,
-              },
-              {
-                $sort: { 'created': parseInt(sortCriteria) },
               },
             ],
             totalCourseCount: [
