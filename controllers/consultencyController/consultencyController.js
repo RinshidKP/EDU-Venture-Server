@@ -516,7 +516,8 @@ export const getDashboardDetails = async (req, res) => {
     const [ 
       applicationCount , acceptedStudents ,
       courses ,coursesWithApplicationCount,
-      pendingApplications,consultantFee
+      pendingApplications,consultantFee,
+      transactions
     ] = await Promise.all([
       applicationDB.getApplicationCountByCreatorId(id),
       applicationDB.getAcceptedStudentsCountByCreatorId(id),
@@ -524,10 +525,16 @@ export const getDashboardDetails = async (req, res) => {
       courseDB.getCoursesWithApplicationCountByCreatorId(id),
       applicationDB.getAllPendingApplicationsByCreatorId(id),
       transactionDB.getTotalFeeForCourseCreator(id),
+      transactionDB.getTransactionsForCourseCreator(id),
     ]);
-    console.log(consultantFee);
+    console.log(transactions);
     const courseCount = courses ? courses.length : 0
-    res.status(200).json({  applicationCount,acceptedStudents, courseCount,coursesWithApplicationCount,pendingApplications,consultantFee});
+    res.status(200).json({ 
+       applicationCount,acceptedStudents,
+       courseCount,coursesWithApplicationCount,
+       pendingApplications,consultantFee,
+       transactions
+      });
   } catch (error) {
     console.error('Error Getting Dashboard Details:', error);
     res.status(500).json({ message: 'An error occurred while Getting Dashboard Details', error: error.message });

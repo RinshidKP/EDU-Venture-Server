@@ -86,6 +86,47 @@ async getTransactionByApplicationId(applicationId) {
       throw error;
     }
   }
+
+  async getTransactionsForCourseCreator(creatorId) {
+    try {
+      const transactions = await Transaction.aggregate([
+        {
+          $match: {
+            isSuccess: true,
+          },
+        },
+        {
+          $lookup: {
+            from: 'courses',
+            localField: 'course',
+            foreignField: '_id',
+            as: 'course',
+          },
+        },
+        {
+          $unwind: '$course',
+        },
+        {
+          $match: {
+            'course.creator_id': new mongoose.mongo.ObjectId(creatorId),
+          },
+        },
+        {
+          $sort: {
+            transactionDate: -1,
+          },
+        },
+        {
+          $limit: 3,
+        },
+      ]);
+  
+      return transactions;
+    } catch (error) {
+      throw error;
+    }
+  }
+  
   
   
 }
