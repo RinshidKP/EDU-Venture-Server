@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Transaction from "../models/transactionSchema.js"; 
 
 class TransactionRepository {
