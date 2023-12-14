@@ -144,9 +144,13 @@ class CourseRepository {
         approved: true,
       };
       if (search && search.trim()) {
-        matchStage.header = { $regex: new RegExp(search.trim(), 'i') };
-        matchStage.short_blob = { $regex: new RegExp(search.trim(), 'i') };
-      }      
+        const searchRegex = new RegExp(search.trim(), 'i');
+        matchStage.$or = [
+          { header: { $regex: searchRegex } },
+          { short_blob: { $regex: searchRegex } },
+        ];
+      }
+      
   
       if (filterCountries.length > 0) {
         matchStage.country = { $in: filterCountries.map(id => new ObjectId(id)) }
