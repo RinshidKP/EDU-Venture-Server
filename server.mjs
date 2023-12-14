@@ -32,6 +32,7 @@ const io = new Server(server, {
   cors: {
     origin: 'https://edu-venture-client.vercel.app',
     methods: ['GET', 'POST'],
+    credentials: true,
   },
 });
 
