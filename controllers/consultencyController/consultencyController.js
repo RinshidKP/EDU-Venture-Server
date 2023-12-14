@@ -527,7 +527,7 @@ export const getDashboardDetails = async (req, res) => {
     ]);
     console.log(consultantFee);
     const courseCount = courses ? courses.length : 0
-    res.status(200).json({  applicationCount,acceptedStudents, courseCount,coursesWithApplicationCount,pendingApplications});
+    res.status(200).json({  applicationCount,acceptedStudents, courseCount,coursesWithApplicationCount,pendingApplications,consultantFee});
   } catch (error) {
     console.error('Error Getting Dashboard Details:', error);
     res.status(500).json({ message: 'An error occurred while Getting Dashboard Details', error: error.message });

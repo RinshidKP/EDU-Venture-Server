@@ -49,7 +49,6 @@ async getTransactionByApplicationId(applicationId) {
       const result = await Transaction.aggregate([
         {
           $match: {
-            receiver: consultancyId,
             isSuccess: true,
           },
         },
@@ -76,19 +75,25 @@ async getTransactionByApplicationId(applicationId) {
           $unwind: '$course',
         },
         {
+          $match: {
+            'course.creator_id': consultancyId,
+          },
+        },
+        {
           $group: {
             _id: null,
             totalFee: { $sum: '$course.fee' },
           },
         },
       ]).exec();
-
+  
       return result.length > 0 ? result[0].totalFee : 0;
     } catch (error) {
       console.error('Error while calculating total fees:', error);
       throw error;
     }
   }
+  
 }
 
 export default TransactionRepository;

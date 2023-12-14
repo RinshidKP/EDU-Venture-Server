@@ -656,8 +656,8 @@ export const checkOutInitiation = async (req,res) => {
       payment_method_types:['card'],
       line_items: line_items,
       mode: 'payment',
-      success_url:`http://localhost:5173/course_details/success/${id}`,
-      cancel_url:  `http://localhost:5173/course_details/cancel/${id}`,
+      success_url:`https://edu-venture-client.vercel.app/course_details/success/${id}`,
+      cancel_url:  `https://edu-venture-client.vercel.app/course_details/cancel/${id}`,
     });
 
     res.json({id:session.id});
