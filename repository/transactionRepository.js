@@ -94,6 +94,7 @@ async getTransactionByApplicationId(applicationId) {
     }
   }
   
+  
 }
 
 export default TransactionRepository;
