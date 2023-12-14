@@ -43,6 +43,52 @@ async getTransactionByApplicationId(applicationId) {
       throw new Error(`Error getting transactions by student ID: ${error.message}`);
     }
   }
+
+  async getTotalFeesByConsultancy(consultancyId) {
+    try {
+      const result = await Transaction.aggregate([
+        {
+          $match: {
+            receiver: mongoose.Types.ObjectId(consultancyId),
+            isSuccess: true,
+          },
+        },
+        {
+          $lookup: {
+            from: 'applications',
+            localField: 'application',
+            foreignField: '_id',
+            as: 'application',
+          },
+        },
+        {
+          $unwind: '$application',
+        },
+        {
+          $lookup: {
+            from: 'courses',
+            localField: 'application.course',
+            foreignField: '_id',
+            as: 'course',
+          },
+        },
+        {
+          $unwind: '$course',
+        },
+        {
+          $group: {
+            _id: null,
+            totalFee: { $sum: '$course.fee' },
+          },
+        },
+      ]).exec();
+
+      return result.length > 0 ? result[0].totalFee : 0;
+    } catch (error) {
+      console.error('Error while calculating total fees:', error);
+      throw error;
+    }
+  }
 }
 
 export default TransactionRepository;

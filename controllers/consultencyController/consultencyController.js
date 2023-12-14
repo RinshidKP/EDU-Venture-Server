@@ -10,6 +10,7 @@ import CountriesRepository from '../../repository/countriesRepository.js';
 import messageRepository from '../../repository/chatRepository.js';
 import imageCloudUpload from '../../helper/couldUpload.js'
 import CertificatesRepository from '../../repository/certificateRepositoy.js';
+import TransactionRepository from '../../repository/transactionRepository.js';
 
 const ConsultancyDB = new ConsultancyRepository();
 const otpModel = new OtpRepository();
@@ -18,6 +19,7 @@ const studentDB = new StudentRepository();
 const applicationDB = new ApplicationRepository();
 const countryDB = new CountriesRepository();
 const certificateDB = new CertificatesRepository();
+const transactionDB = new TransactionRepository();
 
 export const createConsultancy = async (req, res , next) => {
   try {
@@ -511,14 +513,19 @@ export const recieverDetailsId = async (req,res) => {
 export const getDashboardDetails = async (req, res) => {
   try {
     const {id}= req.query;
-    const [ applicationCount , acceptedStudents , courses ,coursesWithApplicationCount,pendingApplications] = await Promise.all([
+    const [ 
+      applicationCount , acceptedStudents ,
+      courses ,coursesWithApplicationCount,
+      pendingApplications,consultantFee
+    ] = await Promise.all([
       applicationDB.getApplicationCountByCreatorId(id),
       applicationDB.getAcceptedStudentsCountByCreatorId(id),
       courseDB.findCoursesByCreator(id),
       courseDB.getCoursesWithApplicationCountByCreatorId(id),
       applicationDB.getAllPendingApplicationsByCreatorId(id),
+      transactionDB.getTotalFeesByConsultancy(id),
     ]);
-    // console.log(pendingApplications);
+    console.log(consultantFee);
     const courseCount = courses ? courses.length : 0
     res.status(200).json({  applicationCount,acceptedStudents, courseCount,coursesWithApplicationCount,pendingApplications});
   } catch (error) {
