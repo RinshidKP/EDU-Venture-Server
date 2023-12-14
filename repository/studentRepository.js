@@ -131,7 +131,7 @@ class StudentRepository {
     }
     async listStudentsForAdmin(search, skipCount = 0, itemsPerPage = 0, sort = { createdAt: 1 }) {
       try {
-        let query = { isAdmin: false };
+        let query = { role: 'student' };
         if (search) {
           query.$or = [
             { full_name: { $regex: new RegExp(search, 'i') } },

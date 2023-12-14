@@ -13,6 +13,7 @@ export const studentsDatas = async (req, res) => {
   try {
     const { page, limit, search } = req.query;
     const email = req.user.email;
+    console.log(page,limit,search);
     if (!email) {
       res.status(400).json({ error: 'Admin Not Found' });
     }

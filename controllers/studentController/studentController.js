@@ -356,7 +356,6 @@ export const view_all_courses = async (req, res) => {
     const itemsPerPage = parseInt(limit, 10);
     const skipCount = (pageNumber - 1) * itemsPerPage;
     const filterArray = Array.isArray(filter) ? filter : filter ? [filter] : [];
-    console.log(sortCountry,sortDate);
     const getCoursesPromise = courseDB.getCoursesByPage(
       skipCount, itemsPerPage ,
       filterArray,search,
