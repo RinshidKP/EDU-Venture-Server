@@ -13,7 +13,7 @@ router.post('/messages', async (req, res) => {
     if(userSockets[receiver]){
         const socket = userSockets[receiver];
         console.log(message);
-        socket.emit('message',{message})
+        socket.emit('message',{message:message})
     }
     res.status(201).json(message);
   } catch (error) {
