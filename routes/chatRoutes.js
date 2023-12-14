@@ -10,10 +10,10 @@ router.post('/messages', async (req, res) => {
   const { sender, receiver, text ,type } = req.body; 
   try {
     const message = await createMessage(sender, receiver, text ,type);
-    if(userSockets[receiver]){
+    if( userSockets[receiver] && message){
         const socket = userSockets[receiver];
         console.log(message);
-        socket.emit('message',{message:message})
+        await socket.emit('message',{message:message})
     }
     res.status(201).json(message);
   } catch (error) {
