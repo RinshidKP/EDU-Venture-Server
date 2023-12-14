@@ -27,10 +27,13 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-const io = new Server(server,{ 
-  transports: ['websocket'], 
-  cors:'https://edu-venture-client.vercel.app'
-})
+const io = new Server(server, {
+  transports: ['websocket'],
+  cors: {
+    origin: 'https://edu-venture-client.vercel.app',
+    methods: ['GET', 'POST'],
+  },
+});
 
 export const userSockets = {}
 
