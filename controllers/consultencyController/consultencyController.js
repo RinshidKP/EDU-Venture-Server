@@ -523,7 +523,7 @@ export const getDashboardDetails = async (req, res) => {
       courseDB.findCoursesByCreator(id),
       courseDB.getCoursesWithApplicationCountByCreatorId(id),
       applicationDB.getAllPendingApplicationsByCreatorId(id),
-      transactionDB.getTotalFeesByConsultancy(id),
+      transactionDB.getTotalFeeForCourseCreator(id),
     ]);
     console.log(consultantFee);
     const courseCount = courses ? courses.length : 0
