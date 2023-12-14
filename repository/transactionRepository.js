@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import Transaction from "../models/transactionSchema.js"; 
 
 class TransactionRepository {
@@ -50,7 +49,7 @@ async getTransactionByApplicationId(applicationId) {
       const result = await Transaction.aggregate([
         {
           $match: {
-            receiver: mongoose.Types.ObjectId(consultancyId),
+            receiver: consultancyId,
             isSuccess: true,
           },
         },
