@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Transaction from "../models/transactionSchema.js"; 
 
 class TransactionRepository {
@@ -65,7 +66,7 @@ async getTransactionByApplicationId(applicationId) {
         },
         {
           $match: {
-            'course.creator_id': creatorId,
+            'course.creator_id': mongoose.Types.ObjectId(creatorId),
           },
         },
         {
