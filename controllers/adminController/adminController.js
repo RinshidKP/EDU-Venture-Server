@@ -214,7 +214,7 @@ export const getDashboardDetails = async (req, res) => {
 
 export const getAllTransactions = async (req, res) => {
   try {
-    const transactions = await getAllTransactionsDB();
+    const transactions = await transactionDB.getAllTransactions();
 
     res.status(200).json({
       success: true,
