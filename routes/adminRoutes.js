@@ -5,6 +5,7 @@ import {
          changeStudentAccess,
          createCountry,
          disableCountryById,
+         getAllTransactions,
          getConsultentData,
          getCountries,
          getCountryData,
@@ -25,5 +26,6 @@ router.post('/disable_country',verify,disableCountryById);
 router.post('/consultant_access',verify,changeConsultencyAccess);   
 router.post('/students_access',verify,changeStudentAccess);
 router.get('/admin_dashboard',verify,getDashboardDetails)
+router.get('/admin_transactions',verify,getAllTransactions)
 
 export default router;

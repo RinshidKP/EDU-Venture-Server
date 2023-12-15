@@ -211,3 +211,17 @@ export const getDashboardDetails = async (req, res) => {
     res.status(500).json({ message: 'An error occurred while Getting Dashboard Details' });
   }
 };
+
+export const getAllTransactions = async (req, res) => {
+  try {
+    const transactions = await getAllTransactionsDB();
+
+    res.status(200).json({
+      success: true,
+      data: transactions,
+    });
+  } catch (error) {
+    console.error('Error Getting Transactions:', error);
+    res.status(500).json({ success: false, message: 'An error occurred while getting transactions.' });
+  }
+};

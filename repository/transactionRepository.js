@@ -199,8 +199,20 @@ async getTransactionByApplicationId(applicationId) {
     }
   }
   
+  async getAllTransactions() {
+    try {
+      const transactions = await Transaction.find({ isSuccess: true })
+        .populate('payer')
+        .populate('receiver')
+        .populate('course')
+        .populate('application')
+        .sort({ transactionDate: -1 });
   
-  
+      return transactions;
+    } catch (error) {
+      throw error;
+    }
+  }  
   
 }
 
