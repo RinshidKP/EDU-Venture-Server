@@ -100,7 +100,7 @@ class ConsultancyRepository {
         matchCondition.$or = [
           { consultancy_name: { $regex: search, $options: 'i' } },
           { title: { $regex: search, $options: 'i' } },
-          { short_blob: { $regex: search, $options: 'i' } },
+          { description: { $regex: search, $options: 'i' } },
         ];
       }
       
