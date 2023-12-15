@@ -218,7 +218,7 @@ export const getAllTransactions = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: transactions,
+      transactions,
     });
   } catch (error) {
     console.error('Error Getting Transactions:', error);
