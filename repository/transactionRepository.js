@@ -87,6 +87,43 @@ async getTransactionByApplicationId(applicationId) {
     }
   }
 
+  async getTotalFeeForAllTransactions() {
+    try {
+      const result = await Transaction.aggregate([
+        {
+          $match: {
+            isSuccess: true,
+          },
+        },
+        {
+          $lookup: {
+            from: 'courses',
+            localField: 'course',
+            foreignField: '_id',
+            as: 'course',
+          },
+        },
+        {
+          $unwind: '$course',
+        },
+        {
+          $group: {
+            _id: null,
+            totalFee: { $sum: '$course.fee' },
+          },
+        },
+      ]);
+  
+      if (result.length > 0) {
+        return result[0].totalFee;
+      } else {
+        return 0;
+      }
+    } catch (error) {
+      throw error;
+    }
+  }  
+
   async getTransactionsForCourseCreator(creatorId) {
     try {
       const transactions = await Transaction.aggregate([
@@ -126,6 +163,42 @@ async getTransactionByApplicationId(applicationId) {
       throw error;
     }
   }
+
+  async getLatestTransactions() {
+    try {
+      const transactions = await Transaction.aggregate([
+        {
+          $match: {
+            isSuccess: true,
+          },
+        },
+        {
+          $lookup: {
+            from: 'courses',
+            localField: 'course',
+            foreignField: '_id',
+            as: 'course',
+          },
+        },
+        {
+          $unwind: '$course',
+        },
+        {
+          $sort: {
+            transactionDate: -1,
+          },
+        },
+        {
+          $limit: 3,
+        },
+      ]);
+  
+      return transactions;
+    } catch (error) {
+      throw error;
+    }
+  }
+  
   
   
   

@@ -3,11 +3,13 @@ import ConsultancyRepository from "../../repository/consultentReprository.js";
 import CountriesRepository from "../../repository/countriesRepository.js";
 import CourseRepository from "../../repository/courseReprository.js";
 import StudentRepository from "../../repository/studentRepository.js"
+import TransactionRepository from "../../repository/transactionRepository.js";
 
 const studentDB = new StudentRepository();
 const consultentDB = new ConsultancyRepository();
 const countryDB = new CountriesRepository();
 const courseDB = new CourseRepository();
+const transactionDB = new TransactionRepository();
 
 export const studentsDatas = async (req, res) => {
   try {
@@ -103,7 +105,6 @@ export const createCountry = async (req, res) => {
 export const disableCountryById = async (req,res) => {
   try {
     const { id } = req.body;
-    // console.log(id);
     const country = await countryDB.disableCountryOrActivate(id)
     if (!country) {
       return res.status(404).json({ error: 'Country not found' });
@@ -185,14 +186,26 @@ export const changeStudentAccess = async (req,res)=> {
 
 export const getDashboardDetails = async (req, res) => {
   try {
-    const [studentsCount, consultantsCount, courseCount, countriesWithCourseCount,unApprovedConsultants] = await Promise.all([
+    const [
+      studentsCount, consultantsCount, courseCount,
+      countriesWithCourseCount,unApprovedConsultants,
+      totalFee,transaction
+    ] = await Promise.all([
       studentDB.totalStudentsCount(),
       consultentDB.totalConsultantsCount(),
       courseDB.totalCourseCount(),
       countryDB.getCountriesWithCourseCount(),
       consultentDB.findUnApprovedConsultants(),
+      transactionDB.getTotalFeeForAllTransactions(),
+      transactionDB.getLatestTransactions()
     ]);
-    res.status(200).json({ studentsCount, consultantsCount, courseCount, countriesWithCourseCount ,unApprovedConsultants});
+    console.log(totalFee);
+    console.log(transaction);
+    res.status(200).json({ 
+      studentsCount, consultantsCount, 
+      courseCount, countriesWithCourseCount,
+      unApprovedConsultants,totalFee,transaction
+    });
   } catch (error) {
     console.error('Error Getting Dashboard Details:', error);
     res.status(500).json({ message: 'An error occurred while Getting Dashboard Details' });
