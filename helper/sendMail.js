@@ -7,8 +7,8 @@ const  sendMail = async (toEmail, otp) => {
       port: 587,
       secure: false,
       auth: {
-        user: process.env.EMAIL,
-        pass: process.env.EMAILPASSWORD,
+        user: 'eduventure26@gmail.com',
+        pass: 'eihlxzzizioettux',
       },
     });
 
